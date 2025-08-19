@@ -13,6 +13,7 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard {
     struct Auction {
         address nftContract;
         uint256 tokenId;
+        uint256 minimumBid;
         uint256 startTime;
         uint256 endTime;
         address beneficiary;
@@ -32,7 +33,7 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard {
     mapping(address => mapping(uint256 => bool)) private nftOnAuction;
     mapping(uint256 => uint256) internal auctionIndexByRequestId;
 
-    event AuctionCreated(uint256 indexed auctionId, address indexed nftCA, uint256 tokenId, address indexed seller, uint256 startTime, uint256 endTime);
+    event AuctionCreated(uint256 indexed auctionId, address indexed nftCA, uint256 tokenId, uint256 minimumBid, address indexed seller, uint256 startTime, uint256 endTime);
     event BidPlaced(uint256 indexed auctionId, address indexed bidder);
     event AuctionResolved(uint256 indexed auctionId, address winner);
     event NFTClaimed(uint256 indexed auctionId, address winner);
@@ -55,13 +56,14 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard {
         _;
     }
 
-    function createAuction(address nftContract, uint256 tokenId, uint256 startTime, uint256 endTime) external {
+    function createAuction(address nftContract, uint256 tokenId, uint256 minimumBid,uint256 startTime, uint256 endTime) external {
         require(!nftOnAuction[nftContract][tokenId], "NFT already on auction");
         require(startTime < endTime, "Invalid time");
 
         Auction storage a = auctions[auctionCount];
         a.nftContract = nftContract;
         a.tokenId = tokenId;
+        a.minimumBid = minimumBid;
         a.startTime = startTime;
         a.endTime = endTime;
         a.beneficiary = msg.sender;
@@ -72,7 +74,7 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard {
         IERC721(nftContract).safeTransferFrom(msg.sender, address(this), tokenId);
         nftOnAuction[nftContract][tokenId] = true;
 
-        emit AuctionCreated(auctionCount, nftContract, tokenId, msg.sender, startTime, endTime);
+        emit AuctionCreated(auctionCount, nftContract, tokenId, minimumBid, msg.sender, startTime, endTime);
         auctionCount++;
     }
 
@@ -81,7 +83,6 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard {
 
         require(nftOnAuction[a.nftContract][a.tokenId], "NFT not on auction");
 
-        
 
         // Get encrypted bid
         euint64 amount = FHE.fromExternal(encryptedAmount, proof);
