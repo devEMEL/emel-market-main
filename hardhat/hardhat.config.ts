@@ -18,7 +18,7 @@ const MNEMONIC: string = vars.get("MNEMONIC", "test test test test test test tes
 const INFURA_API_KEY: string = vars.get("INFURA_API_KEY", "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz");
 
 const config: HardhatUserConfig = {
-  defaultNetwork: "hardhat",
+  defaultNetwork: "sepolia",
   namedAccounts: {
     deployer: 0,
   },

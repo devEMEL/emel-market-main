@@ -1,0 +1,41 @@
+specVersion: 1.0.0
+indexerHints:
+  prune: auto
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: FHEEmelMarket
+    network: sepolia
+    source:
+      address: "0xFfF693618d1e9300bF5218DBA31a6cbDA1BCE755"
+      abi: FHEEmelMarket
+      startBlock: 9025909
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - AuctionCancelled
+        - AuctionCreated
+        - AuctionResolved
+        - BidPlaced
+        - DecryptionFulfilled
+        - NFTClaimed
+      abis:
+        - name: FHEEmelMarket
+          file: ./abis/FHEEmelMarket.json
+      eventHandlers:
+        - event: AuctionCancelled(indexed uint256)
+          handler: handleAuctionCancelled
+        - event: AuctionCreated(indexed uint256,indexed address,uint256,indexed address,uint256,uint256)
+          handler: handleAuctionCreated
+        - event: AuctionResolved(indexed uint256,address)
+          handler: handleAuctionResolved
+        - event: BidPlaced(indexed uint256,indexed address)
+          handler: handleBidPlaced
+        - event: DecryptionFulfilled(indexed uint256)
+          handler: handleDecryptionFulfilled
+        - event: NFTClaimed(indexed uint256,address)
+          handler: handleNFTClaimed
+      file: ./src/fhe-emel-market.ts

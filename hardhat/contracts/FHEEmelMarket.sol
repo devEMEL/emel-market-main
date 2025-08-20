@@ -5,6 +5,7 @@ import {FHE, externalEuint64, euint64, eaddress, ebool} from "@fhevm/solidity/li
 import {SepoliaConfig} from "@fhevm/solidity/config/ZamaConfig.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+
 import {cWETH} from "./cWETH.sol";
 
 contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard {
@@ -13,7 +14,6 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard {
     struct Auction {
         address nftContract;
         uint256 tokenId;
-        uint256 minimumBid;
         uint256 startTime;
         uint256 endTime;
         address beneficiary;
@@ -33,7 +33,7 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard {
     mapping(address => mapping(uint256 => bool)) private nftOnAuction;
     mapping(uint256 => uint256) internal auctionIndexByRequestId;
 
-    event AuctionCreated(uint256 indexed auctionId, address indexed nftCA, uint256 tokenId, uint256 minimumBid, address indexed seller, uint256 startTime, uint256 endTime);
+    event AuctionCreated(uint256 indexed auctionId, address indexed nftCA, uint256 tokenId, address indexed seller, uint256 startTime, uint256 endTime);
     event BidPlaced(uint256 indexed auctionId, address indexed bidder);
     event AuctionResolved(uint256 indexed auctionId, address winner);
     event NFTClaimed(uint256 indexed auctionId, address winner);
@@ -56,25 +56,24 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard {
         _;
     }
 
-    function createAuction(address nftContract, uint256 tokenId, uint256 minimumBid,uint256 startTime, uint256 endTime) external {
+    function createAuction(address nftContract, uint256 tokenId,uint256 startTime, uint256 endTime) external {
         require(!nftOnAuction[nftContract][tokenId], "NFT already on auction");
         require(startTime < endTime, "Invalid time");
 
         Auction storage a = auctions[auctionCount];
         a.nftContract = nftContract;
         a.tokenId = tokenId;
-        a.minimumBid = minimumBid;
         a.startTime = startTime;
         a.endTime = endTime;
         a.beneficiary = msg.sender;
-        a.isActive = true;
+        a.isActive = false;
         a.decryptionRequestId = 0;
 
         // Lock NFT
         IERC721(nftContract).safeTransferFrom(msg.sender, address(this), tokenId);
         nftOnAuction[nftContract][tokenId] = true;
 
-        emit AuctionCreated(auctionCount, nftContract, tokenId, minimumBid, msg.sender, startTime, endTime);
+        emit AuctionCreated(auctionCount, nftContract, tokenId, msg.sender, startTime, endTime);
         auctionCount++;
     }
 
@@ -83,6 +82,11 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard {
 
         require(nftOnAuction[a.nftContract][a.tokenId], "NFT not on auction");
 
+
+        // At least one bid makes it active to prevent cancelling
+        if(!a.isActive) {
+            a.isActive = true;
+        }
 
         // Get encrypted bid
         euint64 amount = FHE.fromExternal(encryptedAmount, proof);
@@ -131,11 +135,10 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard {
     Auction storage a = auctions[auctionId];
     require(msg.sender == a.beneficiary, "Only auction owner can resolve");
     require(a.isActive, "Auction already resolved");
+    require(a.winnerAddress != address(0), "No winner yet");
 
     a.isActive = false;
 
-    // decrypt winning address
-    decryptWinningAddress(auctionId);
     // read winner
     address winner = a.winnerAddress;
 
@@ -146,8 +149,8 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard {
         if (bidder != winner) {
             euint64 refundAmount = a.bids[bidder];
             a.bids[bidder] = FHE.asEuint64(0);
-            FHE.allowTransient(a.bids[bidder], address(paymentToken));
-            paymentToken.confidentialTransfer(bidder, a.bids[bidder]);
+            FHE.allowTransient(refundAmount, address(paymentToken));
+            paymentToken.confidentialTransfer(bidder, refundAmount);
 
         }
     }
@@ -175,22 +178,10 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard {
     function cancelAuction(uint256 auctionId) external {
         Auction storage a = auctions[auctionId];
         require(msg.sender == a.beneficiary, "Not auction owner");
-        require(a.isActive, "Auction already resolved");
+        require(!a.isActive, "Can only cancel inactive auction");
         require(block.timestamp < a.endTime, "Auction already ended");
 
-        // Refund bidders
-        for (uint256 i = 0; i < a.bidders.length; i++) {
-            address bidder = a.bidders[i];
-            euint64 bidAmount = a.bids[bidder];
-            if (FHE.isInitialized(bidAmount)) {
-                a.bids[bidder] = FHE.asEuint64(0);
-
-                FHE.allowTransient(a.bids[bidder], address(paymentToken));
-                paymentToken.confidentialTransfer(bidder, bidAmount);
-
-            }
-        }
-
+ 
         // Return NFT to owner
         IERC721(a.nftContract).transferFrom(address(this), a.beneficiary, a.tokenId);
 
@@ -213,8 +204,10 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard {
         return auctions[auctionId].bids[bidder];
     }
 
+// get users bid on a particular auction
     function getEncryptedBid(uint256 auctionId, address account) external view returns (euint64) {
         Auction storage a = auctions[auctionId];
+
         return a.bids[account];
    }
 
@@ -228,6 +221,7 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard {
     }
 
 
+// called first to set a. winnerAddress
   function decryptWinningAddress(uint256 auctionId) public onlyAfterEnd(auctionId) {
     Auction storage a = auctions[auctionId];
     bytes32[] memory cts = new bytes32[](1);

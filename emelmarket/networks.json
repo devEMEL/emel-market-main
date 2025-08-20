@@ -1,0 +1,8 @@
+{
+  "sepolia": {
+    "FHEEmelMarket": {
+      "address": "0xFfF693618d1e9300bF5218DBA31a6cbDA1BCE755",
+      "startBlock": 9025909
+    }
+  }
+}

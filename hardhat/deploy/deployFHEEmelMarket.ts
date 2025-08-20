@@ -8,7 +8,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await getNamedAccounts();
   let cwethAddress: string;
 
-  cwethAddress = "0xYourSepoliaCWETHAddressHere";
+  cwethAddress = "0xc87bf1921425FA34398Cc98e105DA889806024CB";
 
   // Deploy WETH9Mock (only for local/hardhat networks if you want to conditionally deploy)
   // if (hre.network.name === "localhost" || hre.network.name === "hardhat") {
@@ -26,3 +26,5 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 export default func;
 func.tags = ["fheEmelMarket"];
+
+// fheEmelMarket address = 0xFfF693618d1e9300bF5218DBA31a6cbDA1BCE755

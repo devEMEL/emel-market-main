@@ -17,7 +17,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   // } else if (hre.network.name === "sepolia") {
   //   // Real WETH address on Sepolia
 
-    wethAddress = "0xYourSepoliaWETHAddressHere";
+    wethAddress = "0x2ac4A4358235C61e36e12c75416dcbc8904476A2";
 
   // } else {
   //   throw new Error(`Unsupported network: ${hre.network.name}`);
@@ -38,3 +38,5 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 export default func;
 func.tags = ["cweth"];
 func.dependencies = ["weth"]; // Ensure WETH9Mock is deployed first
+
+// cweth address = 0xc87bf1921425FA34398Cc98e105DA889806024CB
