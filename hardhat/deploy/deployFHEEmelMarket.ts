@@ -22,9 +22,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log(`Deployer Address: ${deployer}`)
   console.log(`FHEEmelMarket deployed to: ${fheEmelMarket.address}`);
   // }
+  
 };
 
 export default func;
 func.tags = ["fheEmelMarket"];
 
-// fheEmelMarket address = 0xFfF693618d1e9300bF5218DBA31a6cbDA1BCE755
+// fheEmelMarket address = 0x44A8Cf12Bf11903C102a0C4055cc3e7622509194

@@ -32,3 +32,5 @@ func.tags = ["FHECounter"];
 
 
 // artifacts/contracts/FHEEmelMarket.sol/FHEEmelMarket.json
+
+// https://api.studio.thegraph.com/query/119165/emelmarket/v0.0.1

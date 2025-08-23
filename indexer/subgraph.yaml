@@ -8,7 +8,7 @@ dataSources:
     name: FHEEmelMarket
     network: sepolia
     source:
-      address: "0xFfF693618d1e9300bF5218DBA31a6cbDA1BCE755"
+      address: "0x44A8Cf12Bf11903C102a0C4055cc3e7622509194" 
       abi: FHEEmelMarket
       startBlock: 9025909
     mapping:
@@ -16,12 +16,7 @@ dataSources:
       apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
-        - AuctionCancelled
-        - AuctionCreated
-        - AuctionResolved
-        - BidPlaced
-        - DecryptionFulfilled
-        - NFTClaimed
+        - Auction
       abis:
         - name: FHEEmelMarket
           file: ./abis/FHEEmelMarket.json
@@ -30,12 +25,9 @@ dataSources:
           handler: handleAuctionCancelled
         - event: AuctionCreated(indexed uint256,indexed address,uint256,indexed address,uint256,uint256)
           handler: handleAuctionCreated
-        - event: AuctionResolved(indexed uint256,address)
-          handler: handleAuctionResolved
-        - event: BidPlaced(indexed uint256,indexed address)
+        - event: BidPlaced(indexed uint256)
           handler: handleBidPlaced
-        - event: DecryptionFulfilled(indexed uint256)
-          handler: handleDecryptionFulfilled
-        - event: NFTClaimed(indexed uint256,address)
+        - event: NFTClaimed(indexed uint256)
           handler: handleNFTClaimed
       file: ./src/fhe-emel-market.ts
+

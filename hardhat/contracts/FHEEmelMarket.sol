@@ -34,9 +34,9 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard {
     mapping(uint256 => uint256) internal auctionIndexByRequestId;
 
     event AuctionCreated(uint256 indexed auctionId, address indexed nftCA, uint256 tokenId, address indexed seller, uint256 startTime, uint256 endTime);
-    event BidPlaced(uint256 indexed auctionId, address indexed bidder);
-    event AuctionResolved(uint256 indexed auctionId, address winner);
-    event NFTClaimed(uint256 indexed auctionId, address winner);
+    event BidPlaced(uint256 indexed auctionId);
+    event AuctionResolved(uint256 indexed auctionId);
+    event NFTClaimed(uint256 indexed auctionId);
     event AuctionCancelled(uint256 indexed auctionId);
 
     constructor(address _paymentToken) {
@@ -124,7 +124,7 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard {
         FHE.allowThis(a.highestBid);
         FHE.allowThis(a.winningAddress);
 
-        emit BidPlaced(auctionId, msg.sender);
+        emit BidPlaced(auctionId);
     }
 
    function resolveAndRefundLosers(uint256 auctionId) 
@@ -170,8 +170,9 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard {
     a.nftClaimed = true;
     delete auctions[auctionId];
 
-    emit AuctionResolved(auctionId, winner);
-    emit NFTClaimed(auctionId, winner);
+
+    emit AuctionResolved(auctionId);
+    emit NFTClaimed(auctionId);
 }
 
 

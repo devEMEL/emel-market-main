@@ -1,0 +1,300 @@
+// @ts-nocheck
+"use client"
+import React, { useEffect, useState } from 'react';
+import { Wallet, Tag, Gavel, History, ExternalLink } from 'lucide-react';
+import { GET_USER_NFTS } from '@/queries/nftQueries';
+import { useAccount, useBalance } from 'wagmi';
+import { useQuery } from '@apollo/client';
+import Link from 'next/link';
+import { Network, Alchemy } from "alchemy-sdk";
+import { formatRelativeTime, truncateAddress, getTimeLeft } from '@/utils';
+import AuctionCard from '@/components/AuctionCard';
+
+
+type Tab = 'nfts'  | 'auctions' | 'activity';
+
+
+
+interface NFT {
+  tokenImage: string;
+  contractAddress: string;
+  tokenId: string;
+  tokenName: string;
+  tokenSymbol: string;
+}
+
+
+interface Auction extends NFT {
+  auctionId: string;
+  seller: string;
+  startTime: string;
+  endTime: string;
+  blockTimestamp: string;
+  transactionHash: string;
+  status: 'AUCTIONED' | 'BID' | 'SOLD' | 'CANCELLED';
+}
+
+// TXN = transactionHash nftId collectionAddress seller price timestamp type/status
+// highest bidder and highest bid decrypted and shown on the frontend
+
+const page = () => {
+  const [activeTab, setActiveTab] = useState<Tab>('nfts');
+  const [userNFTs, setUserNFTs] = useState<NFT[]>([]);
+
+    // const chainId = useChainId();
+    const { address } = useAccount();
+
+
+    const NFTs = [
+    {   
+        tokenImage: "https://ipfs.io/ipfs/bafkreifvmdhd54eiaep2xl2gdakfagl2azjfxas2bbx2v2xgp6uvryvgh4",
+        contractAddress: "0xDE6FCD074d20948b9C6587644D9B70A8bcBE5b12",
+        tokenId: "2",
+        tokenName: "Ethereal Artifacts",
+        tokenSymbol: "EAT",
+        auctionId: "1",
+        seller: "0x75cAd0aE2696B57a3591f1472c43d66ff7378018",
+        startTime: "1755950395",
+        endTime: "1755956995",
+        blockTimestamp: "1755950395",
+        transactionHash: "0x68116e64cfd4d8396d31f5239c30343dc624fd155ab4e9ce94beb2b14127b8c7",
+        status: "AUCTIONED",
+    },
+    {   
+        tokenImage: "https://ipfs.io/ipfs/bafkreifvmdhd54eiaep2xl2gdakfagl2azjfxas2bbx2v2xgp6uvryvgh4",
+        contractAddress: "0xDE6FCD074d20948b9C6587644D9B70A8bcBE5b12",
+        tokenId: "2",
+        tokenName: "Ethereal Artifacts",
+        tokenSymbol: "EAT",
+        auctionId: "1",
+        seller: "0x75cAd0aE2696B57a3591f1472c43d66ff7378018",
+        startTime: "1755950395",
+        endTime: "1755956995",
+        blockTimestamp: "1755950395",
+        transactionHash: "0x68116e64cfd4d8396d31f5239c30343dc624fd155ab4e9ce94beb2b14127b8c7",
+        status: "AUCTIONED",
+    },
+    {
+        tokenImage: "https://ipfs.io/ipfs/bafkreifvmdhd54eiaep2xl2gdakfagl2azjfxas2bbx2v2xgp6uvryvgh4",
+        contractAddress: "0xDE6FCD074d20948b9C6587644D9B70A8bcBE5b12",
+        tokenId: "2",
+        tokenName: "Ethereal Artifacts",
+        tokenSymbol: "EAT",
+        auctionId: "1",
+        seller: "0x75cAd0aE2696B57a3591f1472c43d66ff7378018",
+        startTime: "1755956995",
+        endTime: "1755957995",
+        blockTimestamp: "1755950395",
+        transactionHash: "0x68116e64cfd4d8396d31f5239c30343dc624fd155ab4e9ce94beb2b14127b8c7",
+        status: "AUCTIONED",
+    }
+  ]
+  const settings = {
+    apiKey: "demo", // Replace with your Alchemy API Key.
+    network: Network.ETH_SEPOLIA, // Replace with your network.
+  };
+
+  function flattenNFTs(mynfts: any) {
+    if (!mynfts || !Array.isArray(mynfts)) return [];
+  
+    return mynfts.flatMap(collection =>
+      collection.items.map((token: any) => ({
+        contractAddress: collection.contractAddress,
+        ercStandard: collection.ercStandard,
+        collectionImage: collection.image, // Collection image
+        tokenId: token.tokenId,
+        tokenImage: token.image, // Token image
+        tokenName: token.name.split("#")[0].trim(),
+      }))
+    );
+  }
+  
+
+ const getUserNFTs = async(/**address: any*/) => {
+    try {
+
+    const alchemy = new Alchemy(settings);
+
+      const response = await axios.get('https://api.blockvision.org/v2/monad/account/nfts', {
+        params: {
+          address,
+        //   pageIndex: 1
+        },
+        headers: {
+          'accept': 'application/json',
+          'x-api-key': '2u8MSGSwUroZU2AT4CCy2GVQqgS'
+        }
+      });
+      return response;
+    //   return response.data.result.data;
+    //   return flattenNFTs(response.data.result.data);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+
+
+//   const mockAuctions: Auction[] = [
+//     {
+//       ...NFTs[0],
+//       auctionId: "1",
+//       seller: "0x24f",
+//       startTime: "2 hours ago",
+//       endTime: "2 hours ago",
+//       blockTimestamp: "2 hours ago",
+//       transactionHash: "0xdhjekkw90k",
+//       status: 'AUCTIONED'
+     
+//     }
+//   ];
+
+
+  const tabs = [
+    { id: 'nfts', label: 'My NFTs', icon: Wallet },
+    { id: 'auctions', label: 'My Auctions', icon: Gavel },
+    { id: 'activity', label: 'My Activity', icon: History }
+  ];
+
+
+
+  useEffect(() => {
+    console.log({NFTs});
+    // const getUserNFTs = await getUserNFTs();
+    // console.log({nfts: getUserNFTs});
+  })
+  // NFTS FECHED FROM ALCHEMY API
+  // Auctions read from indexer
+
+//   if (nftsFetchLoading) return <p>Loading...</p>; // Loading Spinner
+//   if (nftsFetchError) return <p>Error : {nftsFetchError.message}</p>
+
+//   if(!NFTs) {
+//       return <p>No data available</p>
+//   }
+// {NFTs?.nfts.map((nft, index) => (
+  const renderNFTGrid = () => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {NFTs.map((nft, index) => (
+        <div key={index} className="bg-gray-800/30 rounded-lg overflow-hidden">
+            <Link href={{
+                pathname:`/auction/${nft.id}`,
+                query: { nft: JSON.stringify(nft)}
+            }}>
+            <img src={nft.tokenImage} alt={nft.tokenName} className="w-full h-48 object-cover" />
+            <div className="p-4">
+                <h3 className="text-lg font-semibold">{nft.tokenName} #{nft.tokenId}</h3>
+                {/* <p className="text-gray-400 text-sm">Token ID: {nft.tokenId}</p> */}
+                <p className="text-gray-400 text-sm truncate">CA: {truncateAddress(nft.contractAddress)}</p>
+            </div>
+            </Link>
+        </div>
+      ))}
+    </div>
+  );
+
+
+  const renderAuctions = () => (
+
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {NFTs.map((auction: any, index: any) => (
+        <AuctionCard
+            key={auction.transactionHash}
+            isAuctionPage={false}
+            auction={auction} 
+        />
+       ))}
+    </div>
+    // import AuctionCard
+    
+    
+  );
+
+
+  const renderActivity = () => (
+    <div className="overflow-x-auto">
+      <table className="w-full text-xs">
+        <thead>
+          <tr className="text-left border-b border-gray-700">
+            <th className="px-6 py-3 text-gray-400">Tx Hash</th>
+            <th className="px-6 py-3 text-gray-400">Type</th>
+            <th className="px-6 py-3 text-gray-400">NFT ID</th>
+            <th className="px-6 py-3 text-gray-400">CA</th>
+            <th className="px-6 py-3 text-gray-400">Seller</th>
+            <th className="px-6 py-3 text-gray-400">Time</th>
+            {/* type = status */}
+          </tr>
+        </thead>
+        
+        <tbody>
+          {NFTs.map((tx, index) => (
+            <tr key={index} className="border-b border-gray-800 hover:bg-gray-800/30">
+              <td className="px-6 py-4">
+                <a href={`https://sepolia.etherscan.io/tx/${tx.transactionHash}`} target='blank' className="flex items-center text-blue-400 hover:text-blue-300">
+                  {truncateAddress(tx.transactionHash)}
+                  <ExternalLink className="w-4 h-4 ml-1"
+                   />
+                </a>
+              </td>
+              <td className="px-6 py-4">{tx.status}</td>
+              <td className="px-6 py-4">{tx.tokenId}</td>
+              <td className="px-6 py-4 font-mono">{tx.contractAddress}</td>
+              <td className="px-6 py-4 font-mono">{truncateAddress(tx.seller)}</td>
+              <td className="px-6 py-4">{formatRelativeTime(tx.blockTimestamp)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gradient-deep text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+          <h1 className="text-3xl font-bold mb-4 md:mb-0">My Profile</h1>
+          <div className="flex space-x-2 text-sm">
+            <div className="bg-gray-800/30 rounded-lg px-4 py-2">
+              {/* <span className="text-gray-400">Balance:</span> */}
+              {/* <span className="ml-2">2.5</span> */}
+               {/* user balance */}
+            </div>
+            <div className="bg-gray-800/30 rounded-lg px-4 py-2 font-mono">
+              {/* <span className="text-gray-400">Address:</span>  */}
+              {/* <span className="ml-2">0x1234...5678</span> */}
+               {/* user address */}
+            </div>
+          </div>
+        </div>
+            
+
+        <div className="mb-8">
+          <nav className="flex space-x-4">
+            {tabs.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => setActiveTab(id as Tab)}
+                className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+                  activeTab === id 
+                    ? 'bg-blue-600 text-white' 
+                    : 'text-gray-400 hover:text-white hover:bg-gray-800/30'
+                }`}
+              >
+                <Icon className="w-4 h-4 mr-2" />
+                {label}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        <div className="bg-gray-800/30 rounded-lg p-6">
+          {activeTab === 'nfts' && renderNFTGrid()}
+          {activeTab === 'auctions' && renderAuctions()}
+          {activeTab === 'activity' && renderActivity()}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default page;

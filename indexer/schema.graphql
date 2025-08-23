@@ -1,0 +1,22 @@
+
+enum AuctionStatus {
+    AUCTIONED
+    BID
+    SOLD
+    CANCELLED
+}
+
+type Auction @entity {
+  id: ID!
+  auctionId: BigInt! # uint256
+  nftCA: Bytes! # address
+  tokenId: BigInt! # uint256
+  seller: Bytes! # address
+  startTime: BigInt! # uint256
+  endTime: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+  status: AuctionStatus!
+}
+

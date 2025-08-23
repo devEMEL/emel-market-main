@@ -19,10 +19,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
     wethAddress = "0x2ac4A4358235C61e36e12c75416dcbc8904476A2";
 
-  // } else {
-  //   throw new Error(`Unsupported network: ${hre.network.name}`);
-  // }
-
+ 
   // Deploy cWETH
   const cweth = await deploy("cWETH", {
     from: deployer,
