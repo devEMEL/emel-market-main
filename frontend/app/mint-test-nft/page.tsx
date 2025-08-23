@@ -1,33 +1,52 @@
 "use client"
 
 import React, { useState } from 'react';
-import { Zap, Users, Clock, Sparkles } from 'lucide-react';
+import { Zap, Sparkles } from 'lucide-react';
+import { toast } from 'react-toastify';
+import { useAccount, useReadContract, useWriteContract } from 'wagmi';
+import Erc721 from '@/abi/Erc721.json';
+import { getTokenURI } from '@/utils';
+
 
 const page = () => {
   const [isMinting, setIsMinting] = useState(false);
-  const [minted, setMinted] = useState(false);
+//   const [minted, setMinted] = useState(false);
+  const [fetchingTokenURI, setFetchingTokenURI] = useState(false);
 
-  const handleMint = () => {
+  const { writeContractAsync, isPending, isSuccess } = useWriteContract();
+
+  const handleMint = async() => {
+ 
+    setFetchingTokenURI(true);
+
+    // prepare tokenURI
+    const metadata = {
+        name: "Cosmic Genesis", // next time
+        description: " An extraordinary journey through the cosmos, captured in a single moment of stellar beauty. This unique piece represents the birth of new worlds and infinite possibilities.",
+        image: "ipfs://bafkreifmecajuvxhwavl5etrxzru5brpf5olvyuusndoow7xn6sbzf3pry",
+    };
+    console.log(metadata);
+    const tokenURI = await getTokenURI(metadata);
+    console.log({tokenURI});
+
+    setFetchingTokenURI(false);
+
     setIsMinting(true);
-    // Simulate minting process
-    setTimeout(() => {
-      setIsMinting(false);
-      //logic
-      setMinted(true);
-      //toastify success message
-      setTimeout(() => setMinted(false), 3000);
-    }, 2000);
+    await writeContractAsync({
+        address: Erc721.address as `0x${string}`,
+        abi: Erc721.abi,
+        functionName: "mint",
+        args: [tokenURI]
+    });
+    setIsMinting(false);
+
+    toast.success('NFT minted successfully....');
   };
+  
 
   return (
     <div className="min-h-screen bg-gray-800/30 relative overflow-hidden">
       {/* Background Pattern */}
-      <div className="absolute inset-0 bg-black/20"></div>
-      <div className="absolute inset-0" style={{
-        backgroundImage: `radial-gradient(circle at 25% 25%, rgba(120, 119, 198, 0.3) 0%, transparent 50%), 
-                         radial-gradient(circle at 75% 75%, rgba(255, 119, 198, 0.3) 0%, transparent 50%)`
-      }}></div>
-      
       <div className="relative z-10 container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
@@ -54,10 +73,6 @@ const page = () => {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
                 </div>
                 
-                {/* Floating Elements */}
-                <div className="absolute -top-4 -right-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full p-3 shadow-lg animate-pulse">
-                  <Sparkles className="w-6 h-6 text-white" />
-                </div>
               </div>
 
               {/* NFT Details */}
@@ -77,12 +92,11 @@ const page = () => {
                   onClick={handleMint}
                   className="w-full bg-white text-black font-bold py-4 px-8 rounded-2xl overflow-hidden"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 transform -skew-x-12 translate-x-full group-hover:translate-x-[-200%] transition-transform duration-1000"></div>
                   <div className="relative flex items-center justify-center space-x-3">
-                    {isMinting ? (
+                    {/* {isMinting ? (
                       <>
                         <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent"></div>
-                        <span className="text-xl">Minting...</span>
+                        <span className="text-xl">Minting NFT</span>
                       </>
                     ) : minted ? (
                       <>
@@ -94,7 +108,25 @@ const page = () => {
                         <Zap className="w-6 h-6" />
                         <span className="text-xl">Mint NFT</span>
                       </>
-                    )}
+                    )} */}
+
+                    {isMinting && (<>
+                        <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent"></div>
+                        <span className="text-xl">Minting NFT...</span>
+                      </>)}
+                      {fetchingTokenURI && (
+                        <>
+                        <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent"></div>
+                        <span className="text-xl">Fetching TokenURI...</span>
+                        </>
+                      )}
+                      {!isMinting && !fetchingTokenURI && (
+                        <>
+                         <Zap className="w-6 h-6" />
+                         <span className="text-xl">Mint NFT</span>
+                       </>
+                      )}
+
                   </div>
                 </button>
 
@@ -111,3 +143,19 @@ const page = () => {
 
 export default page;
 
+// {isMinting ? (
+//                       <>
+//                         <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent"></div>
+//                         <span className="text-xl">Fetching TokenURI</span>
+//                       </>
+//                     ) : minted ? (
+//                       <>
+//                         <Sparkles className="w-6 h-6 animate-pulse" />
+//                         <span className="text-xl">Minted Successfully!</span>
+//                       </>
+//                     ) : (
+//                       <>
+//                         <Zap className="w-6 h-6" />
+//                         <span className="text-xl">Mint NFT</span>
+//                       </>
+//                     )}
