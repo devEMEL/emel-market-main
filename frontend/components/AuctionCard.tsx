@@ -1,3 +1,4 @@
+'use client';
 import { useImageLoader } from '@/hooks/useImageLoader';
 import { getTimeLeft } from '@/utils'
 import { Alchemy, Network } from 'alchemy-sdk';
@@ -8,6 +9,8 @@ import { useEthersProvider, useEthersSigner } from '@/app/layout';
 import EmelMarket from "@/abi/EmelMarket.json";
 import { toast } from 'react-toastify';
 import { Zap } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 
 
@@ -47,13 +50,12 @@ const AuctionCard: React.FC<AuctionCardProps> = ({auction, isAuctionPage}) => {
     const [isCancellingAuction, setIsCancellingAuction] = useState(false);
      const { address } = useAccount();
      const imageUri = tokenDetails?.tokenImage;
+     const router = useRouter();
 
      const { imageSrc, isLoading, error } = useImageLoader(imageUri);
-
-         const { writeContractAsync, isPending, isSuccess } = useWriteContract();
      
-         const provider = useEthersProvider();
-         const signer = useEthersSigner();
+    const provider = useEthersProvider();
+    const signer = useEthersSigner();
      
 
      // get token name, symbol and tokenuri from alchemy/read contract
@@ -140,6 +142,7 @@ const AuctionCard: React.FC<AuctionCardProps> = ({auction, isAuctionPage}) => {
             !isAuctionPage ? 
             (<div>
                 <button
+                // href={`/auction/${auction.auctionId}`}
                 className="w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-white/90 disabled:bg-white/50 mb-4"
             >
                 View Auction Details
@@ -166,8 +169,9 @@ const AuctionCard: React.FC<AuctionCardProps> = ({auction, isAuctionPage}) => {
             </div>) :
             <button
                 className="w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-white/90 disabled:bg-white/50"
+                onClick={() => router.push(`/auction/${auction.auctionId}`)}
+
             >
-                
                 View Auction Details
             </button>
           }

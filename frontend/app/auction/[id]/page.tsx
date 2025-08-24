@@ -1,338 +1,380 @@
-// // @ts-nocheck
 
-// "use client"
-// import React, { useEffect, useState } from 'react';
-// import { ArrowLeft, Info, Clock, Tag, Gavel } from 'lucide-react';
-// import { ethers } from "ethers";
-// import EmelMarketAbi from "@/abi/EmelMarket.json";
-// import { useEthersProvider, useEthersSigner } from '@/app/layout';
-// import { useAccount } from 'wagmi';
-// import { useSearchParams, usePathname, useRouter } from 'next/navigation';
-// import { useMutation } from '@apollo/client';
-// import { CREATE_LISTING } from '@/mutations/listingsMutations';
-// import { GET_LISTINGS } from '@/queries/listingsQueries';
-// import Erc721Abi from "@/abi/Erc721.json";
+"use client"
+import React, { useEffect, useState } from 'react';
+import { Clock, User, Gavel, Trophy, Eye, Wallet } from 'lucide-react';
+import { ethers } from "ethers";
+import EmelMarket from "@/abi/EmelMarket.json";
+import { useEthersProvider, useEthersSigner } from '@/app/layout';
+import { useAccount } from 'wagmi';
+import Erc721Abi from "@/abi/Erc721.json";
+import { Alchemy, Network } from 'alchemy-sdk';
+import { useQuery } from '@tanstack/react-query';
+import { gql, request } from 'graphql-request';
+import { useImageLoader } from '@/hooks/useImageLoader';
+import { formatRelativeTime, getTimeLeft, truncateAddress } from '@/utils';
 
-// interface ListingPageProps {
-//     params: {
-//         id: string;
-//     }
-// }
+interface AuctionData {
+  id: string;
+  image: string;
+  title: string;
+  description: string;
+  nftContract: string;
+  tokenId: string;
+  currentBid: string;
+  startTime: string;
+  endTime: string;
+  seller: string;
+  myBid: string;
+  winningBid: string;
+  winningAddress: string;
+  isActive: boolean;
+}
 
-// interface ExistingData {
-//     listings: any[]
-// }
+interface AuctionPageProps {
+    params: {
+        id: string;
+    }
+}
 
-// const page: React.FC<ListingPageProps> = ({ params }) => {
+const alchemy = new Alchemy({
+    apiKey: "TajhoIdNGy7RFjvAjEMca", 
+    network: Network.ETH_SEPOLIA, 
+});
 
-//     const { id } = params; 
- 
-//     const searchParams = useSearchParams();
-//     const _nft = searchParams.get("nft"); 
-//     const nft = JSON.parse(_nft);
-
-
-//     const provider = useEthersProvider();
-//     const signer = useEthersSigner()
-//     const { address } = useAccount();
-
-//     const [createListing, { loading, error }] = useMutation(CREATE_LISTING, {
-//         update(cache, { data: { createListing } }) {
-
-//           const existingData: ExistingData | null = cache.readQuery({ 
-//             query: GET_LISTINGS 
-//           });
-          
-//           if (existingData) {
-//             const { listings } = existingData;
-//             cache.writeQuery({
-//               query: GET_LISTINGS,
-//               data: { 
-//                 collections: [...listings, createListing]
-//               },
-//             });
-//           }
-//         },
-//         onError: (error) => {
-//           console.error('Create collection error:', error);
-//         }
-//       });
-
-
-//     // const isOwner = async () => !!address && address.toUpperCase() === (await contract.ownerOf(tokenIdParam)).toUpperCase();
-
-//     const [isOwner, setIsOwner] = useState<boolean>(false);
-
-//     const [param, setParam] = useState<string | null>("");
-//   const [price, setPrice] = useState<string>("");
-//   const [isAuction, setIsAuction] = useState<boolean>(false);
-//   const [auctionDuration, setAuctionDuration] = useState<string>("7");
-//   const [isLoading, setIsLoading] = useState<boolean>(false);
-//   const [status, setStatus] = useState<{
-//     type: 'idle' | 'pending' | 'success' | 'error';
-//     message: string;
-//   }>({ type: 'idle', message: '' });
-
-// //   
-//     const [contractAddressParam, tokenIdParam] = [String(id).split("-")[0].trim(), String(id).split("-")[1].trim()];
-
-//     const contract = new ethers.Contract(
-//         contractAddressParam,
-//         Erc721Abi,
-//         signer
-//     );
-
-//     const contractRead = new ethers.Contract(
-//         contractAddressParam,
-//         Erc721Abi,
-//         provider
-//     );
+    const query = gql`{
+        auctions(where: { auctionId: "1" }) {
+            id
+            auctionId
+            nftCA
+            tokenId
+            seller
+            startTime
+            endTime
+            blockNumber
+            blockTimestamp
+            transactionHash
+            status
+        }
+    }`
 
 
+const url = 'https://api.studio.thegraph.com/query/119165/emelmarket/version/latest';
+const headers = { Authorization: 'Bearer {api-key}' };
 
-//   const handleSubmit = async (e: React.FormEvent) => {
-//     e.preventDefault();
-//     setIsLoading(true);
-//     setStatus({ type: 'pending', message: isAuction ? 'Creating auction...' : 'Listing NFT...' });
+const page: React.FC<AuctionPageProps> = ({ params }) => {
 
-//     try {
-//       // Simulate transaction
-//     //   await new Promise(resolve => setTimeout(resolve, 2000));
+    const { id } = params; 
 
-//       if(!isAuction) {
-//         console.log("LIST NFT");
+    const { data, isSuccess } = useQuery({
+        queryKey: ['auction-page-data'],
+        async queryFn() {
+            return await request(url, query, {}, headers)
+        }
+    });
     
 
-//         console.log({mk: EmelMarketAbi.network[0].address});
-//         console.log({token: BigInt(nft?.tokenId)});
-   
+    const [tokenDetails, setTokenDetails] = useState<any>({});
+    const [bidAmount, setBidAmount] = useState('');
+    const [showMyBid, setShowMyBid] = useState(false);
+    const [showWinningBid, setShowWinningBid] = useState(false);
+    const [showWinningAddress, setShowWinningAddress] = useState(false);
 
-//         const tx = await contract.approve(String(EmelMarketAbi.network[0].address), BigInt(nft?.tokenId));
-//         await tx.wait();
-//         console.log(`Marketplace approved for NFT ${nft?.tokenId}`);
+    const now = Math.floor(Date.now() / 1000);
 
-//         // NFTCollectionFactory.network[2].address
-//         const contract2 = new ethers.Contract(
-//             EmelMarketAbi.network[0].address,
-//             EmelMarketAbi.abi,
-//             signer
-//         );
+    const imageUri = tokenDetails?.tokenImage;
+    const { imageSrc } = useImageLoader(imageUri);
+    // fetch auctions from indexer
+    // display time left..........
 
+    const provider = useEthersProvider();
+    const signer = useEthersSigner()
+    const { address } = useAccount();
+
+    const [isOwner, setIsOwner] = useState<boolean>(false);
+
+    const [param, setParam] = useState<string | null>("");
+    const [price, setPrice] = useState<string>("");
+    const [isAuction, setIsAuction] = useState<boolean>(false);
+    const [auctionDuration, setAuctionDuration] = useState<string>("7");
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+
+
+    const getUserTokenDetails = async() => {
      
+        console.log("hello wolrd");
+        console.log(data);
+        console.log(data?.auctions[0].nftCA as `0x${string}`, BigInt(data?.auctions[0].tokenId));
+        const response = await alchemy.nft.getNftMetadata(data?.auctions[0].nftCA as `0x${string}`, BigInt(data?.auctions[0].tokenId));
+            
 
-        
-//         console.log({ca: nft?.contractAddress, tokenId: BigInt( nft?.tokenId), price: ethers.parseEther(price)})
-//         const listNFT = await contract2.listNFT(nft?.contractAddress, BigInt( nft?.tokenId), ethers.parseEther(String(price)));
-//         const response = await listNFT.wait();
+          
+        console.log( response.image.originalUrl, response.name, response.contract.symbol);
 
-//         console.log(response);
-        
+         return {
+            tokenImage: response.image.originalUrl,
+            tokenName: response.name,
+            tokenSymbol: response.contract.symbol
+         }
      
-//         const filter = contract2.filters.NFTListed();
-//         const events = await contract2.queryFilter(filter, response.blockNumber);
-//         console.log(events);
-        
+       }
 
-//         const eventObj = {
-//             seller:  events[0].args[3],
-//             contractAddress: events[0].args[0],
-//             tokenId: events[0].args[1],
-//             price: events[0].args[2],
-//             createdAt: events[0].args[4],
-
-//         };
-//         console.log({eventObj});
+    // const contract = new ethers.Contract(
+    //     contractAddressParam,
+    //     Erc721Abi,
+    //     signer
+    // );
 
 
-//         await createListing({variables: {seller: String(eventObj.seller), nftContract: String(eventObj.contractAddress), tokenId: String(eventObj.tokenId), price: String(eventObj.price), createdAt: String(eventObj.createdAt)}})
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    // e.preventDefault();
+    
+
+    try {
+
+      //use status for hook to display success or error message
+    } catch (error) {
+      
+    } 
+  };
+
+//   const handlePlaceBid = () => {
+//     if (!bidAmount || parseFloat(bidAmount) <= parseFloat(auction?.currentBid || '0')) {
+//       alert('Bid must be higher than current bid');
+//       return;
+//     }
+//     // Implement bid placement logic here
+//     alert(`Bid of ${bidAmount} ETH placed successfully!`);
+//     setBidAmount('');
+//   };
 
 
-//         // return {
-//         //     name: eventObj.name,
-//         //     imageURI: eventObj.imageURI
-//         // }
+  useEffect(() => {
+    console.log({id});
+    let mounted = true;
+    (async () => {
+      try {
+        if(isSuccess){
+             const details = await getUserTokenDetails();
+             if (mounted) setTokenDetails(details);
+        }
+       
+      } catch (e) {
+        console.error('Failed to fetch token details', e);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
 
+  }, [id, data, isSuccess]);
 
-//       }
-//       if(isAuction) {
-//         console.log("Auction nft")
-//       }
+  // Loading Spinner
+//     if (!auction) {
+//     return (
+//       <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center">
+//         <div className="animate-spin rounded-full h-32 w-32 border-4 border-white border-t-transparent"></div>
+//       </div>
+//     );
+//   }
+// data?.auctions
+  return (
 
+        <div className="min-h-screen bg-gradient-deep text-white">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 bg-black/20"></div>
+      <div className="absolute inset-0" style={{
+        backgroundImage: `radial-gradient(circle at 25% 25%, rgba(120, 119, 198, 0.3) 0%, transparent 50%), 
+                         radial-gradient(circle at 75% 75%, rgba(255, 119, 198, 0.3) 0%, transparent 50%)`
+      }}></div>
+
+      <div className="relative z-10 container mx-auto px-4 py-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Back Button */}
+          <button className="mb-6 text-white/70 hover:text-white transition-colors flex items-center space-x-2">
+            <span>← Back to Auctions</span>
+          </button>
+
+          <div className="grid lg:grid-cols-2 gap-12">
+            {/* Left Side - Image */}
+            <div className="space-y-6">
+              <div className="relative">
+                <div className="aspect-square rounded-3xl overflow-hidden shadow-2xl">
+                  <img
+                    src={imageSrc}
+                    alt={tokenDetails.tokenName}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+                </div>
+                
+                {/* Status Badge */}
+                <div className="absolute top-4 left-4">
+                  <span className={`px-4 py-2 rounded-full text-sm font-semibold ${
+                    data?.auctions[0].status == "AUCTIONED" 
+                      ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                      : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                  }`}>
+
+                    {
+                      data?.auctions[0].endTime < now ? (
+                        'Auction Ended Already'
+                      ) : (
+                        data?.auctions[0].status == "AUCTIONED" ? ('Live Auction') : (
+                            data?.auctions[0].status == "CANCELLED" && 'Live Auction is cancelled'
+                        )
+                      )   
+                    }
+                  </span>
+                </div>
+              </div>
+
+              {/* NFT Details */}
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+                <h3 className="text-xl font-bold text-white mb-4">NFT Details</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">Contract</span>
+                    <span className="text-white font-mono text-sm">{truncateAddress(data?.auctions[0].nftCA)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">Token ID</span>
+                    <span className="text-white font-semibold">#{data?.auctions[0].tokenId}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">Seller</span>
+                    <span className="text-white font-mono text-sm">{truncateAddress(data?.auctions[0].seller)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Side - Auction Info */}
+            <div className="space-y-8">
+              {/* Title and Description */}
+
+              {/* Time Left */}
+              <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-2xl p-6 border border-purple-500/30">
+                <div className="flex items-center space-x-3 mb-2">
+                  <Clock className="w-6 h-6 text-purple-400" />
+                  <span className="text-gray-300">Time Remaining</span>
+                </div>
+                <div className="text-3xl font-bold text-white">{getTimeLeft(data?.auctions[0].startTime, data?.auctions[0].endTime)}</div>
+              </div>
+
+              {/* Current Bid */}
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+                <div className="flex items-center space-x-3 mb-2">
+                  <Gavel className="w-6 h-6 text-blue-400" />
+                  <span className="text-gray-300">Current Bid</span>
+                </div>
+                <div className="text-4xl font-bold text-white mb-2">- ETH</div>
+              </div>
+
+              {/* Auction Timeline */}
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+                <h3 className="text-xl font-bold text-white mb-4">Auction Timeline</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">Start Time</span>
+                    <span className="text-white">{formatRelativeTime(data?.auctions[0].startTime)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">End Time</span>
+                    <span className="text-white">{formatRelativeTime(data?.auctions[0].endTime)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bidding Section */}
+              {/* {auction.isActive && (
+                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+                  <h3 className="text-xl font-bold text-white mb-4">Place Your Bid</h3>
+                  <div className="flex space-x-3">
+                    <input
+                      type="number"
+                      step="0.01"
+                      min={parseFloat(auction.currentBid) + 0.01}
+                      value={bidAmount}
+                      onChange={(e) => setBidAmount(e.target.value)}
+                      placeholder="Enter bid amount"
+                      className="flex-1 bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-purple-500"
+                    />
+                    <button
+                      onClick={handlePlaceBid}
+                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105"
+                    >
+                      Bid
+                    </button>
+                  </div>
+                </div>
+              )} */}
+
+              {/* Action Buttons */}
+              {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button
+                  onClick={() => setShowMyBid(!showMyBid)}
+                  className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2"
+                >
+                  <User className="w-5 h-5" />
+                  <span>My Bid</span>
+                </button>
+
+                <button
+                  onClick={() => setShowWinningBid(!showWinningBid)}
+                  className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2"
+                >
+                  <Trophy className="w-5 h-5" />
+                  <span>Winning Bid</span>
+                </button>
+
+                <button
+                  onClick={() => setShowWinningAddress(!showWinningAddress)}
+                  className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2"
+                >
+                  <Wallet className="w-5 h-5" />
+                  <span>Winner</span>
+                </button>
+              </div> */}
+
+              {/* Information Panels */}
+              {/* {showMyBid && (
+                <div className="bg-blue-500/20 border border-blue-500/30 rounded-2xl p-6">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <User className="w-6 h-6 text-blue-400" />
+                    <span className="text-blue-300 font-semibold">Your Current Bid</span>
+                  </div>
+                  <div className="text-2xl font-bold text-white">{auction.myBid} ETH</div>
+                </div>
+              )} */}
+{/* 
+              {showWinningBid && (
+                <div className="bg-green-500/20 border border-green-500/30 rounded-2xl p-6">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <Trophy className="w-6 h-6 text-green-400" />
+                    <span className="text-green-300 font-semibold">Winning Bid</span>
+                  </div>
+                  <div className="text-2xl font-bold text-white">{auction.winningBid} ETH</div>
+                </div>
+              )} */}
+{/* 
+              {showWinningAddress && (
+                <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-2xl p-6">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <Wallet className="w-6 h-6 text-yellow-400" />
+                    <span className="text-yellow-300 font-semibold">Winning Address</span>
+                  </div>
+                  <div className="text-lg font-mono text-white break-all">{auction.winningAddress}</div>
+                </div>
+              )} */}
+            </div>
+          </div>
+        </div>
+      </div>
+        </div>
+    )  
 
   
-//       setStatus({ 
-//         type: 'success', 
-//         message: isAuction ? 'Auction created successfully!' : 'NFT listed successfully!' 
-//       });
+};
 
-//       //use status for hook to display success or error message
-//     } catch (error) {
-//       setStatus({ 
-//         type: 'error', 
-//         message: 'Transaction failed. Please try again.' 
-//       });
-//     } finally {
-//       setIsLoading(false);
-//     }
-//   };
-
-//   const getStatusColor = () => {
-//     switch (status.type) {
-//       case 'pending': return 'text-yellow-400';
-//       case 'success': return 'text-green-400';
-//       case 'error': return 'text-red-400';
-//       default: return '';
-//     }
-//   };
-
-//   useEffect(() => {
-
-//     const checkOwner = async () => {
-//         setIsOwner(!!address && address.toUpperCase() === (await contractRead.ownerOf(tokenIdParam)).toUpperCase())
-//     }
-//     checkOwner();
-
-//     // get nft from the query 
-
-//   }, [address, tokenIdParam, contract]);
-
-//   return (
-//     <>
-//     { isOwner ? (
-//         <div className="min-h-screen bg-gradient-deep text-white">
-//         <button className="flex items-center text-gray-300 hover:text-white transition-colors mb-8">
-//           <ArrowLeft className="w-5 h-5 mr-2" />
-//           Back to my NFTs
-//         </button>
-        
-//         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-//           {/* Left Column - Image */}
-//           <div className="rounded-2xl overflow-hidden bg-gradient-to-b from-gray-800/50 to-gray-900/50 p-4">
-//             <img
-//               src={nft?.collectionImage}
-//               alt={nft?.tokenName}
-//               className="w-full h-auto rounded-xl"
-//             />
-//             <div className="mt-4 p-4 bg-gray-800/30 rounded-lg">
-//               <h2 className="text-xl font-semibold mb-2">NFT Details</h2>
-//               <div className="space-y-2 text-sm">
-//                 <p><span className="text-gray-400">Token ID:</span> {tokenIdParam}</p>
-//                 <p><span className="text-gray-400">Contract:</span> {contractAddressParam}</p>
-//                 {/* <p><span className="text-gray-400">Owner:</span> {address}</p> */}
-//                 <p><span className="text-gray-400">Network:</span> {nft?.chainId === String(10143) ? "Monad Testnet" : "--"}</p>
-//               </div>
-//             </div>
-//           </div>
-        
-//           {/* Right Column - Listing Form */}
-//           <div className="space-y-8">
-//             <div>
-//               <h1 className="text-4xl font-bold">{nft?.tokenName} #{nft?.tokenId}</h1>
-//               <p className="text-gray-400 mt-2">Configure your listing details below</p>
-//             </div>
-        
-//             <div className="bg-gray-800/30 rounded-lg p-6">
-//               <div className="flex items-center justify-between mb-6">
-//                 <div className="flex items-center space-x-4">
-//                   <button
-//                     onClick={() => setIsAuction(false)}
-//                     className={`flex items-center px-4 py-2 rounded-lg transition-colors ${!isAuction ? 'bg-blue-600' : 'bg-gray-700'}`}
-//                   >
-//                     <Tag className="w-4 h-4 mr-2" />
-//                     Fixed Price
-//                   </button>
-//                   <button
-//                     onClick={() => setIsAuction(true)}
-//                     className={`flex items-center px-4 py-2 rounded-lg transition-colors ${isAuction ? 'bg-blue-600' : 'bg-gray-700'}`}
-//                   >
-//                     <Gavel className="w-4 h-4 mr-2" />
-//                     Auction
-//                   </button>
-//                 </div>
-//               </div>
-        
-//               <form onSubmit={handleSubmit} className="space-y-6">
-//                 <div>
-//                   <div className="flex justify-between items-center mb-2">
-//                     <label htmlFor="price" className="text-lg font-medium">
-//                       {isAuction ? 'Starting Price' : 'Listing Price'}
-//                     </label>
-//                     <div className="flex items-center text-sm text-gray-400">
-//                       <Info className="w-4 h-4 mr-1" />
-//                       Service Fee: 5%
-//                     </div>
-//                   </div>
-//                   <div className="relative">
-//                     <input
-//                       type="number"
-//                       id="price"
-//                       value={price}
-//                       onChange={(e) => setPrice(e.target.value)}
-//                       placeholder="0.00"
-//                       step="0.01"
-//                       min="0"
-//                       className="w-full bg-gray-800/30 border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-//                     />
-//                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">MON</span>
-//                   </div>
-//                 </div>
-        
-//                 {isAuction && (
-//                   <div>
-//                     <label htmlFor="duration" className="flex items-center text-lg font-medium mb-2">
-//                       <Clock className="w-4 h-4 mr-2" />
-//                       Auction Duration
-//                     </label>
-//                     <select
-//                       id="duration"
-//                       value={auctionDuration}
-//                       onChange={(e) => {setAuctionDuration(e.target.value); console.log(`Auction duration is ${e.target.value}`); console.log(auctionDuration)}}
-//                       className="w-full bg-gray-800/30 border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-//                     >
-//                         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30].map((el, i) => (
-//                             <option key={el} value={el}>{el} day</option>
-//                         ))}
-//                     </select>
-//                   </div>
-//                 )}
-        
-//                 {status.message && (
-//                   <div className={`p-4 rounded-lg bg-gray-800/50 ${getStatusColor()}`}>
-//                     {status.message}
-//                   </div>
-//                 )}
-        
-//                 <div className="flex space-x-4">
-//                   <button
-//                     type="submit"
-//                     disabled={isLoading || !price}
-//                     className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-//                   >
-//                     {isLoading ? (
-//                       "Processing..."
-//                     ) : isAuction ? (
-//                       "Create Auction"
-//                     ) : (
-//                       "List NFT"
-//                     )}
-//                   </button>
-//                   <button
-//                     type="button"
-//                     className="px-6 py-4 border border-gray-600 rounded-lg text-gray-300 hover:text-white hover:border-gray-500 transition-colors"
-//                   >
-//                     Cancel
-//                   </button>
-//                 </div>
-//               </form>
-//             </div>
-//           </div>
-//         </div>
-//         </div>
-//     ) : (<div>You can only list your nft</div>) }
-//     </> 
-
-//   );
-// };
-
-// export default page;
-
+export default page;

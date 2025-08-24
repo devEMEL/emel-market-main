@@ -18,7 +18,7 @@ import MyNFTCard from '@/components/MyNFTCard';
 type Tab = 'nfts'  | 'auctions' | 'activity';
 
 const query = gql`{
-  auctions(first: 5) {
+  auctions(first: 100) {
     id
     auctionId
     nftCA
@@ -230,7 +230,7 @@ const page = () => {
               </td>
               <td className="px-6 py-4">{tx.status}</td>
               <td className="px-6 py-4">{tx.tokenId}</td>
-              <td className="px-6 py-4 font-mono">{tx.contractAddress}</td>
+              <td className="px-6 py-4 font-mono">{tx.nftCA}</td>
               <td className="px-6 py-4 font-mono">{truncateAddress(tx.seller)}</td>
               <td className="px-6 py-4">{formatRelativeTime(tx.blockTimestamp)}</td>
             </tr>
