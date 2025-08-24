@@ -4,11 +4,12 @@ pragma solidity ^0.8.27;
 import {FHE, externalEuint64, euint64, eaddress, ebool} from "@fhevm/solidity/lib/FHE.sol";
 import {SepoliaConfig} from "@fhevm/solidity/config/ZamaConfig.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {ERC721Holder} from "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import {cWETH} from "./cWETH.sol";
 
-contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard {
+contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard, ERC721Holder {
     using FHE for *;
 
     struct Auction {

@@ -7,17 +7,41 @@ import { useAccount, useBalance } from 'wagmi';
 import Link from 'next/link';
 import { Network, Alchemy } from "alchemy-sdk";
 import { formatRelativeTime, truncateAddress, getTimeLeft } from '@/utils';
+
+import { useQuery } from '@tanstack/react-query';
+import { gql, request } from 'graphql-request';
+
 import AuctionCard from '@/components/AuctionCard';
 import MyNFTCard from '@/components/MyNFTCard';
 
 
 type Tab = 'nfts'  | 'auctions' | 'activity';
 
+const query = gql`{
+  auctions(first: 5) {
+    id
+    auctionId
+    nftCA
+    tokenId
+    seller
+    startTime
+    endTime
+    blockNumber
+    blockTimestamp
+    transactionHash
+    status
+
+
+  }
+}`
+// use nftCA and tokenId to get name, symbol and uri
+const url = 'https://api.studio.thegraph.com/query/119165/emelmarket/version/latest'
+const headers = { Authorization: 'Bearer {api-key}' }
 
 
 interface NFT {
   tokenImage: string;
-  contractAddress: string;
+  nftCA: string;
   tokenId: string;
   tokenName: string;
   tokenSymbol: string;
@@ -36,6 +60,11 @@ interface Auction extends NFT {
 
 // TXN = transactionHash nftId collectionAddress seller price timestamp type/status
 // highest bidder and highest bid decrypted and shown on the frontend
+
+const alchemy = new Alchemy({
+    apiKey: "TajhoIdNGy7RFjvAjEMca", 
+    network: Network.ETH_SEPOLIA, 
+});
 
 const page = () => {
   const [activeTab, setActiveTab] = useState<Tab>('nfts');
@@ -90,25 +119,22 @@ const page = () => {
     }
   ]
 
-
-  const alchemy = new Alchemy({
-    apiKey: "TajhoIdNGy7RFjvAjEMca", 
-    network: Network.ETH_SEPOLIA, 
-  });
+  const { data } = useQuery({
+    queryKey: ['data'],
+    async queryFn() {
+      return await request(url, query, {}, headers)
+    }
+  })
 
 
  const getUserNFTs = async(alc, add) => {
 
 
-    console.log("fetching NFTs for address:", address);
-    console.log("...");
 
     // Print total NFT count returned in the response:
     const nftsForOwner = await alchemy.nft.getNftsForOwner(address);
-    console.log("number of NFTs found:", nftsForOwner.totalCount);
-    console.log("...");
 
-    console.log(nftsForOwner);
+    // console.log(nftsForOwner);
     const metadataList: NFT[] = nftsForOwner.ownedNfts.map(async(nft) => {
         const response = await alchemy.nft.getNftMetadata(nft.contract.address, nft.tokenId);
  
@@ -122,26 +148,10 @@ const page = () => {
 
         }
     });
-    console.log({metadataList});
+    // console.log({metadataList});
     return await Promise.all(metadataList);
 
   }
-
-
-
-//   const mockAuctions: Auction[] = [
-//     {
-//       ...NFTs[0],
-//       auctionId: "1",
-//       seller: "0x24f",
-//       startTime: "2 hours ago",
-//       endTime: "2 hours ago",
-//       blockTimestamp: "2 hours ago",
-//       transactionHash: "0xdhjekkw90k",
-//       status: 'AUCTIONED'
-     
-//     }
-//   ];
 
 
   const tabs = [
@@ -153,9 +163,8 @@ const page = () => {
 
 
   useEffect(() => {
-    console.log({NFTs});
+    // console.log({NFTs});
     getUserNFTs(alchemy, address).then(res => setUserNFTs(res));
-    // console.log({nfts: getUserNFTs});
   })
   // NFTS FECHED FROM ALCHEMY API
   // Auctions read from indexer
@@ -182,16 +191,14 @@ const page = () => {
   const renderAuctions = () => (
 
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {NFTs.map((auction: any, index: any) => (
+      {data?.auctions.map((auction: any, index: any) => (
         <AuctionCard
             key={auction.transactionHash}
             isAuctionPage={false}
             auction={auction} 
         />
        ))}
-    </div>
-    // import AuctionCard
-    
+    </div>    
     
   );
 
@@ -212,7 +219,7 @@ const page = () => {
         </thead>
         
         <tbody>
-          {NFTs.map((tx, index) => (
+          {data?.auctions.map((tx, index) => (
             <tr key={index} className="border-b border-gray-800 hover:bg-gray-800/30">
               <td className="px-6 py-4">
                 <a href={`https://sepolia.etherscan.io/tx/${tx.transactionHash}`} target='blank' className="flex items-center text-blue-400 hover:text-blue-300">

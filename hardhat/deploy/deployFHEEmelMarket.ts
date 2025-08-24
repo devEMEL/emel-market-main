@@ -28,4 +28,5 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 export default func;
 func.tags = ["fheEmelMarket"];
 
-// fheEmelMarket address = 0x44A8Cf12Bf11903C102a0C4055cc3e7622509194
+// npx hardhat deploy --network sepolia --tags fheEmelMarket
+// fheEmelMarket address = 0xa592C283b5d389E2e52d5363320448E95B75b838

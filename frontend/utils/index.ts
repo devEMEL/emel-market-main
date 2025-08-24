@@ -3,11 +3,14 @@ import axios from 'axios';
 import { FileObject, PinataSDK } from 'pinata-web3';
 
 
+
+
 const pinata = new PinataSDK({
     pinataJwt: process.env.NEXT_PUBLIC_PINATA_JWT,
     pinataGateway: 'https://ipfs.io',
 });
 
+export const SUBGRAPH_URL = "https://api.studio.thegraph.com/query/119165/emelmarket/version/latest";
 export const zeroAddress = "0x0000000000000000000000000000000000000000";
 
 export const truncateAddress = (
@@ -21,7 +24,7 @@ export const truncateAddress = (
 
 export function getTimeLeft(start: any, end: any) {
   const now = Date.now(); // current timestamp in ms
-  console.log({now});
+//   console.log({now});
 
   let start_ = start * 1000;
   let end_ = end * 1000;

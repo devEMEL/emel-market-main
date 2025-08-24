@@ -8,7 +8,7 @@ dataSources:
     name: FHEEmelMarket
     network: sepolia
     source:
-      address: "0x44A8Cf12Bf11903C102a0C4055cc3e7622509194" 
+      address: "0xa592C283b5d389E2e52d5363320448E95B75b838" 
       abi: FHEEmelMarket
       startBlock: 9025909
     mapping:

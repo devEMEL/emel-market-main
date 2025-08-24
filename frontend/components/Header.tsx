@@ -30,7 +30,7 @@ const Header: React.FC = () => {
                             Mint Test NFT
                         </Link>
                         <Link
-                            href="/auctions"
+                            href="/"
                             className="bg-white hover:bg-gray-100 text-black px-4 py-2 rounded-lg font-medium flex items-center space-x-2 transition-colors cursor-pointer"
                         >
                             Auctions
@@ -100,7 +100,7 @@ const Header: React.FC = () => {
                             Mint Test NFT
                         </Link>
                         <Link
-                            href="/auctions"
+                            href="/"
                             //   className="block text-white hover:text-white/80 px-3 py-2"
                             className="bg-white hover:bg-gray-100 text-black px-4 py-2 rounded-lg font-medium flex items-center space-x-2 transition-colors cursor-pointer"
                         >

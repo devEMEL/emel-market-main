@@ -93,22 +93,7 @@ const page = () => {
                   className="w-full bg-white text-black font-bold py-4 px-8 rounded-2xl overflow-hidden"
                 >
                   <div className="relative flex items-center justify-center space-x-3">
-                    {/* {isMinting ? (
-                      <>
-                        <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent"></div>
-                        <span className="text-xl">Minting NFT</span>
-                      </>
-                    ) : minted ? (
-                      <>
-                        <Sparkles className="w-6 h-6 animate-pulse" />
-                        <span className="text-xl">Minted Successfully!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Zap className="w-6 h-6" />
-                        <span className="text-xl">Mint NFT</span>
-                      </>
-                    )} */}
+
 
                     {isMinting && (<>
                         <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent"></div>
@@ -143,19 +128,4 @@ const page = () => {
 
 export default page;
 
-// {isMinting ? (
-//                       <>
-//                         <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent"></div>
-//                         <span className="text-xl">Fetching TokenURI</span>
-//                       </>
-//                     ) : minted ? (
-//                       <>
-//                         <Sparkles className="w-6 h-6 animate-pulse" />
-//                         <span className="text-xl">Minted Successfully!</span>
-//                       </>
-//                     ) : (
-//                       <>
-//                         <Zap className="w-6 h-6" />
-//                         <span className="text-xl">Mint NFT</span>
-//                       </>
-//                     )}
+
