@@ -6,7 +6,6 @@ import React, { FormEvent, useState } from 'react';
 import NFTCollection from '@/abi/NFTCollection.json';
 import { useEthersProvider, useEthersSigner } from '@/app/layout';
 import { useAccount, useChainId } from 'wagmi';
-import { useMutation } from '@apollo/client';
 import { CREATE_NFT } from '@/mutations/nftMutations';
 import { GET_NFTS } from '@/queries/nftQueries';
 import { useToastify } from '@/hooks/useToastify';

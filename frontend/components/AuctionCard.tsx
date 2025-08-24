@@ -62,22 +62,22 @@ const AuctionCard: React.FC<AuctionCardProps> = ({auction, isAuctionPage}) => {
                 type="submit"
                 className="w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-white/90 disabled:bg-white/50 mb-4"
             >
-                Place Bid
+                View Auction Details
             </button>
             <button
                 type="submit"
-                className="w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-white/90 disabled:bg-white/50"
+                className="w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-white/90 disabled:bg-white/50 mb-4"
             >
                 {/* {address == auction.seller && 'Cancel Bid'} */}
-                Cancel Bid
+                Cancel Auction
             </button>
             </div>) :
             <button
                 type="submit"
                 className="w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-white/90 disabled:bg-white/50"
             >
-                {/* {address == auction.seller && 'Cancel Bid'} */}
-                Cancel Bid
+                
+                View Auction Details
             </button>
           }
 

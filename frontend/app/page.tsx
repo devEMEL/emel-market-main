@@ -3,8 +3,6 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Tag, TrendingUp } from 'lucide-react';
-import { useQuery } from '@apollo/client';
-import { GET_LISTINGS } from '@/queries/listingsQueries';
 
 interface Collection {
   contractAddress: string;

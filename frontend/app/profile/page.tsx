@@ -4,11 +4,11 @@ import React, { useEffect, useState } from 'react';
 import { Wallet, Tag, Gavel, History, ExternalLink } from 'lucide-react';
 import { GET_USER_NFTS } from '@/queries/nftQueries';
 import { useAccount, useBalance } from 'wagmi';
-import { useQuery } from '@apollo/client';
 import Link from 'next/link';
 import { Network, Alchemy } from "alchemy-sdk";
 import { formatRelativeTime, truncateAddress, getTimeLeft } from '@/utils';
 import AuctionCard from '@/components/AuctionCard';
+import MyNFTCard from '@/components/MyNFTCard';
 
 
 type Tab = 'nfts'  | 'auctions' | 'activity';
@@ -89,48 +89,42 @@ const page = () => {
         status: "AUCTIONED",
     }
   ]
-  const settings = {
-    apiKey: "demo", // Replace with your Alchemy API Key.
-    network: Network.ETH_SEPOLIA, // Replace with your network.
-  };
 
-  function flattenNFTs(mynfts: any) {
-    if (!mynfts || !Array.isArray(mynfts)) return [];
-  
-    return mynfts.flatMap(collection =>
-      collection.items.map((token: any) => ({
-        contractAddress: collection.contractAddress,
-        ercStandard: collection.ercStandard,
-        collectionImage: collection.image, // Collection image
-        tokenId: token.tokenId,
-        tokenImage: token.image, // Token image
-        tokenName: token.name.split("#")[0].trim(),
-      }))
-    );
-  }
-  
 
- const getUserNFTs = async(/**address: any*/) => {
-    try {
+  const alchemy = new Alchemy({
+    apiKey: "TajhoIdNGy7RFjvAjEMca", 
+    network: Network.ETH_SEPOLIA, 
+  });
 
-    const alchemy = new Alchemy(settings);
 
-      const response = await axios.get('https://api.blockvision.org/v2/monad/account/nfts', {
-        params: {
-          address,
-        //   pageIndex: 1
-        },
-        headers: {
-          'accept': 'application/json',
-          'x-api-key': '2u8MSGSwUroZU2AT4CCy2GVQqgS'
+ const getUserNFTs = async(alc, add) => {
+
+
+    console.log("fetching NFTs for address:", address);
+    console.log("...");
+
+    // Print total NFT count returned in the response:
+    const nftsForOwner = await alchemy.nft.getNftsForOwner(address);
+    console.log("number of NFTs found:", nftsForOwner.totalCount);
+    console.log("...");
+
+    console.log(nftsForOwner);
+    const metadataList: NFT[] = nftsForOwner.ownedNfts.map(async(nft) => {
+        const response = await alchemy.nft.getNftMetadata(nft.contract.address, nft.tokenId);
+ 
+        return {
+            tokenImage: response.image.originalUrl,
+            contractAddress: response.contract.address,
+            tokenId: response.tokenId,
+            tokenName: response.name,
+            tokenSymbol: response.contract.symbol,
+            description: response.description,
+
         }
-      });
-      return response;
-    //   return response.data.result.data;
-    //   return flattenNFTs(response.data.result.data);
-    } catch (error) {
-      console.error(error);
-    }
+    });
+    console.log({metadataList});
+    return await Promise.all(metadataList);
+
   }
 
 
@@ -160,7 +154,7 @@ const page = () => {
 
   useEffect(() => {
     console.log({NFTs});
-    // const getUserNFTs = await getUserNFTs();
+    getUserNFTs(alchemy, address).then(res => setUserNFTs(res));
     // console.log({nfts: getUserNFTs});
   })
   // NFTS FECHED FROM ALCHEMY API
@@ -175,20 +169,11 @@ const page = () => {
 // {NFTs?.nfts.map((nft, index) => (
   const renderNFTGrid = () => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {NFTs.map((nft, index) => (
-        <div key={index} className="bg-gray-800/30 rounded-lg overflow-hidden">
-            <Link href={{
-                pathname:`/auction/${nft.id}`,
-                query: { nft: JSON.stringify(nft)}
-            }}>
-            <img src={nft.tokenImage} alt={nft.tokenName} className="w-full h-48 object-cover" />
-            <div className="p-4">
-                <h3 className="text-lg font-semibold">{nft.tokenName} #{nft.tokenId}</h3>
-                {/* <p className="text-gray-400 text-sm">Token ID: {nft.tokenId}</p> */}
-                <p className="text-gray-400 text-sm truncate">CA: {truncateAddress(nft.contractAddress)}</p>
-            </div>
-            </Link>
-        </div>
+      {userNFTs.map((nft, index) => (
+        <MyNFTCard 
+            key={`${nft.contractAddress}-${nft.tokenId}`}
+            nft={nft}
+        />
       ))}
     </div>
   );
