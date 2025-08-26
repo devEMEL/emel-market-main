@@ -13,6 +13,7 @@ import { gql, request } from 'graphql-request';
 
 import AuctionCard from '@/components/AuctionCard';
 import MyNFTCard from '@/components/MyNFTCard';
+import { useFhe } from '@/components/FheProvider';
 
 
 type Tab = 'nfts'  | 'auctions' | 'activity';
@@ -69,6 +70,7 @@ const alchemy = new Alchemy({
 const page = () => {
   const [activeTab, setActiveTab] = useState<Tab>('nfts');
   const [userNFTs, setUserNFTs] = useState<NFT[]>([]);
+
 
     // const chainId = useChainId();
     const { address } = useAccount();

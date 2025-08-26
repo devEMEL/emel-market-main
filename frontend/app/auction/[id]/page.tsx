@@ -1,7 +1,7 @@
 
 "use client"
 import React, { useEffect, useState } from 'react';
-import { Clock, User, Gavel, Trophy, Eye, Wallet } from 'lucide-react';
+import { Clock, User, Gavel, Trophy, Eye, Wallet, RefreshCw, Loader2 } from 'lucide-react';
 import { ethers } from "ethers";
 import EmelMarket from "@/abi/EmelMarket.json";
 import { useEthersProvider, useEthersSigner } from '@/app/layout';
@@ -11,7 +11,7 @@ import { Alchemy, Network } from 'alchemy-sdk';
 import { useQuery } from '@tanstack/react-query';
 import { gql, request } from 'graphql-request';
 import { useImageLoader } from '@/hooks/useImageLoader';
-import { formatRelativeTime, getTimeLeft, truncateAddress } from '@/utils';
+import { etherToWei, formatRelativeTime, getTimeLeft, truncateAddress } from '@/utils';
 
 interface AuctionData {
   id: string;
@@ -41,8 +41,18 @@ const alchemy = new Alchemy({
     network: Network.ETH_SEPOLIA, 
 });
 
-    const query = gql`{
-        auctions(where: { auctionId: "1" }) {
+
+const url = 'https://api.studio.thegraph.com/query/119165/emelmarket/version/latest';
+const headers = { Authorization: 'Bearer {api-key}' };
+
+const page: React.FC<AuctionPageProps> = ({ params }) => {
+
+    const { id } = params; 
+
+
+    const query = gql`
+        query GetAuction($id: BigInt!) {
+            auctions(where: { auctionId: $id }) {
             id
             auctionId
             nftCA
@@ -58,17 +68,10 @@ const alchemy = new Alchemy({
     }`
 
 
-const url = 'https://api.studio.thegraph.com/query/119165/emelmarket/version/latest';
-const headers = { Authorization: 'Bearer {api-key}' };
-
-const page: React.FC<AuctionPageProps> = ({ params }) => {
-
-    const { id } = params; 
-
     const { data, isSuccess } = useQuery({
         queryKey: ['auction-page-data'],
         async queryFn() {
-            return await request(url, query, {}, headers)
+            return await request(url, query, { id }, headers)
         }
     });
     
@@ -76,8 +79,18 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
     const [tokenDetails, setTokenDetails] = useState<any>({});
     const [bidAmount, setBidAmount] = useState('');
     const [showMyBid, setShowMyBid] = useState(false);
-    const [showWinningBid, setShowWinningBid] = useState(false);
     const [showWinningAddress, setShowWinningAddress] = useState(false);
+
+    const [isOwner, setIsOwner] = useState<boolean>(false);
+
+    const [param, setParam] = useState<string | null>("");
+    const [price, setPrice] = useState<string>("");
+    const [isAuction, setIsAuction] = useState<boolean>(false);
+    const [auctionDuration, setAuctionDuration] = useState<string>("7");
+    const [bidStatus, setBidStatus] = useState<string>("Place Bid");
+    const [isPlacingBid, setIsPlacingBid] = useState<boolean>(false);
+    const [isApprovingWeth, setIsApprovingWeth] = useState<boolean>(false);
+
 
     const now = Math.floor(Date.now() / 1000);
 
@@ -89,14 +102,6 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
     const provider = useEthersProvider();
     const signer = useEthersSigner()
     const { address } = useAccount();
-
-    const [isOwner, setIsOwner] = useState<boolean>(false);
-
-    const [param, setParam] = useState<string | null>("");
-    const [price, setPrice] = useState<string>("");
-    const [isAuction, setIsAuction] = useState<boolean>(false);
-    const [auctionDuration, setAuctionDuration] = useState<string>("7");
-    const [isLoading, setIsLoading] = useState<boolean>(false);
 
 
     const getUserTokenDetails = async() => {
@@ -124,6 +129,18 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
     //     signer
     // );
 
+ const getButtonText = () => {
+    if (isApprovingWeth) return 'Approving WETH';
+    if (isPlacingBid) return 'Placing Bid...';
+    return 'Place Bid';
+  };
+
+  const resetStates = () => {
+    setIsApprovingWeth(false);
+    setIsPlacingBid(false);
+  };
+
+    const isLoading = isApprovingWeth || isPlacingBid;
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -138,15 +155,28 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
     } 
   };
 
-//   const handlePlaceBid = () => {
-//     if (!bidAmount || parseFloat(bidAmount) <= parseFloat(auction?.currentBid || '0')) {
-//       alert('Bid must be higher than current bid');
-//       return;
-//     }
-//     // Implement bid placement logic here
-//     alert(`Bid of ${bidAmount} ETH placed successfully!`);
-//     setBidAmount('');
-//   };
+  const handlePlaceBid = () => {
+    if (!bidAmount) return;
+    const bidAmountInWei = etherToWei(bidAmount);
+    console.log({bidAmount: bidAmountInWei});
+
+    if (isLoading) return;
+    
+    // Example flow: first approve WETH, then place bid
+    if (!isApprovingWeth && !isPlacingBid) {
+      setIsApprovingWeth(true);
+      // Simulate WETH approval
+      setTimeout(() => {
+        setIsApprovingWeth(false);
+        setIsPlacingBid(true);
+        // Simulate placing bid
+        setTimeout(() => {
+          setIsPlacingBid(false);
+        }, 2000);
+      }, 2000);
+    }
+
+  };
 
 
   useEffect(() => {
@@ -181,12 +211,6 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
   return (
 
         <div className="min-h-screen bg-gradient-deep text-white">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 bg-black/20"></div>
-      <div className="absolute inset-0" style={{
-        backgroundImage: `radial-gradient(circle at 25% 25%, rgba(120, 119, 198, 0.3) 0%, transparent 50%), 
-                         radial-gradient(circle at 75% 75%, rgba(255, 119, 198, 0.3) 0%, transparent 50%)`
-      }}></div>
 
       <div className="relative z-10 container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
@@ -235,7 +259,7 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-300">Contract</span>
-                    <span className="text-white font-mono text-sm">{truncateAddress(data?.auctions[0].nftCA)}</span>
+                    <span className="text-white font-mono text-sm">{data?.auctions[0].nftCA}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-300">Token ID</span>
@@ -243,7 +267,7 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-300">Seller</span>
-                    <span className="text-white font-mono text-sm">{truncateAddress(data?.auctions[0].seller)}</span>
+                    <span className="text-white font-mono text-sm">{data?.auctions[0].seller}</span>
                   </div>
                 </div>
               </div>
@@ -287,14 +311,13 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
               </div>
 
               {/* Bidding Section */}
-              {/* {auction.isActive && (
+              {data?.auctions[0].endTime > now && (
                 <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
                   <h3 className="text-xl font-bold text-white mb-4">Place Your Bid</h3>
                   <div className="flex space-x-3">
                     <input
                       type="number"
-                      step="0.01"
-                      min={parseFloat(auction.currentBid) + 0.01}
+                      step="0.001"
                       value={bidAmount}
                       onChange={(e) => setBidAmount(e.target.value)}
                       placeholder="Enter bid amount"
@@ -304,11 +327,18 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
                       onClick={handlePlaceBid}
                       className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105"
                     >
-                      Bid
+                      {/* <RefreshCw className="w-5 h-5 animate-spin" />
+                      <span>{bidStatus}</span> */}
+                      {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                      {getButtonText()}
                     </button>
                   </div>
                 </div>
-              )} */}
+              )}
+
+
+
+              {/* cancel bid if owner */}
 
               {/* Action Buttons */}
               {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -337,7 +367,7 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
                 </button>
               </div> */}
 
-              {/* Information Panels */}
+              {/* Information Panels (mybid is encrypted initially) */}
               {/* {showMyBid && (
                 <div className="bg-blue-500/20 border border-blue-500/30 rounded-2xl p-6">
                   <div className="flex items-center space-x-3 mb-2">
@@ -347,18 +377,9 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
                   <div className="text-2xl font-bold text-white">{auction.myBid} ETH</div>
                 </div>
               )} */}
-{/* 
-              {showWinningBid && (
-                <div className="bg-green-500/20 border border-green-500/30 rounded-2xl p-6">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <Trophy className="w-6 h-6 text-green-400" />
-                    <span className="text-green-300 font-semibold">Winning Bid</span>
-                  </div>
-                  <div className="text-2xl font-bold text-white">{auction.winningBid} ETH</div>
-                </div>
-              )} */}
-{/* 
-              {showWinningAddress && (
+
+                    {/* show winning address only when auction is over */}
+              {/* {showWinningAddress && (
                 <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-2xl p-6">
                   <div className="flex items-center space-x-3 mb-2">
                     <Wallet className="w-6 h-6 text-yellow-400" />
@@ -366,7 +387,7 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
                   </div>
                   <div className="text-lg font-mono text-white break-all">{auction.winningAddress}</div>
                 </div>
-              )} */}
+              )}  */}
             </div>
           </div>
         </div>

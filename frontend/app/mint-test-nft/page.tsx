@@ -6,6 +6,8 @@ import { toast } from 'react-toastify';
 import { useAccount, useReadContract, useWriteContract } from 'wagmi';
 import Erc721 from '@/abi/Erc721.json';
 import { getTokenURI } from '@/utils';
+import { ethers } from 'ethers';
+import { useEthersProvider, useEthersSigner } from '../layout';
 
 
 const page = () => {
@@ -14,6 +16,9 @@ const page = () => {
   const [fetchingTokenURI, setFetchingTokenURI] = useState(false);
 
   const { writeContractAsync, isPending, isSuccess } = useWriteContract();
+
+   const provider = useEthersProvider();
+   const signer = useEthersSigner();
 
   const handleMint = async() => {
  
@@ -32,12 +37,16 @@ const page = () => {
     setFetchingTokenURI(false);
 
     setIsMinting(true);
-    await writeContractAsync({
-        address: Erc721.address as `0x${string}`,
-        abi: Erc721.abi,
-        functionName: "mint",
-        args: [tokenURI]
-    });
+    
+    const erc721Contract = new ethers.Contract(
+        Erc721.address,
+        Erc721.abi,
+        signer
+    );
+
+    const erc721ContractTx = await erc721Contract.mint(String(tokenURI));
+    const response = await erc721ContractTx.wait();
+    console.log(response);
     setIsMinting(false);
 
     toast.success('NFT minted successfully....');

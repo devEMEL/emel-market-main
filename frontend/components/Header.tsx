@@ -30,6 +30,12 @@ const Header: React.FC = () => {
                             Mint Test NFT
                         </Link>
                         <Link
+                            href="/get-cweth"
+                            className="bg-black text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2 transition-colors cursor-pointer ml-2"
+                        >
+                            Get CWETH
+                        </Link>
+                        <Link
                             href="/"
                             className="bg-white hover:bg-gray-100 text-black px-4 py-2 rounded-lg font-medium flex items-center space-x-2 transition-colors cursor-pointer"
                         >
@@ -98,6 +104,13 @@ const Header: React.FC = () => {
                             className="bg-black text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2 transition-colors cursor-pointer"
                         >
                             Mint Test NFT
+                        </Link>
+                        <Link
+                            href="/get-cweth"
+                            //   className="block text-white hover:text-white/80 px-3 py-2"
+                            className="bg-black text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2 transition-colors cursor-pointer"
+                        >
+                            Get CWETH
                         </Link>
                         <Link
                             href="/"

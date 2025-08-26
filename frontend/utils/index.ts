@@ -42,28 +42,51 @@ export function getTimeLeft(start: any, end: any) {
   return `${days}d ${hours}h ${minutes}m ${seconds}s`;
 }
 
+export const formatRelativeTime = (timestamp: any) => {
+  const now = Date.now();
+  const diffInSeconds = Math.floor((timestamp * 1000 - now) / 1000); // positive if future
 
-export const formatRelativeTime = (timestamp: any): any => {
-    const now = Date.now();
-    const diffInSeconds = Math.floor((now - timestamp * 1000) / 1000);
-  
+  if (diffInSeconds >= 0) {
+    // Future time → show "time left"
     if (diffInSeconds < 60) {
-      return `${diffInSeconds} seconds ago`;
+      return `${diffInSeconds} sec left`;
     }
-  
+
     const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) {
+      return `${diffInMinutes} min${diffInMinutes === 1 ? '' : 's'} left`;
+    }
+
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) {
+      return `${diffInHours} hr${diffInHours === 1 ? '' : 's'} left`;
+    }
+
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays} day${diffInDays === 1 ? '' : 's'} left`;
+
+  } else {
+    // Past time → show "ago"
+    const pastSeconds = Math.abs(diffInSeconds);
+
+    if (pastSeconds < 60) {
+      return `${pastSeconds} seconds ago`;
+    }
+
+    const diffInMinutes = Math.floor(pastSeconds / 60);
     if (diffInMinutes < 60) {
       return `${diffInMinutes} minutes ago`;
     }
-  
+
     const diffInHours = Math.floor(diffInMinutes / 60);
     if (diffInHours < 24) {
       return `${diffInHours} ${diffInHours === 1 ? 'hr' : 'hrs'} ago`;
     }
-  
+
     const diffInDays = Math.floor(diffInHours / 24);
     return `${diffInDays} ${diffInDays === 1 ? 'day' : 'days'} ago`;
-  };
+  }
+};
 
 export const etherToWei = (amountInEther: string) => {
     return ethers.parseEther(amountInEther);
