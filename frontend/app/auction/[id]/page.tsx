@@ -83,7 +83,9 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
 
     const [tokenDetails, setTokenDetails] = useState<any>({});
     const [bidAmount, setBidAmount] = useState('');
+    const [myBid, setMyBid] = useState('0.001');
     const [showMyBid, setShowMyBid] = useState(false);
+    const [winningAddress, setWinningAddress] = useState('0x2345');
     const [showWinningAddress, setShowWinningAddress] = useState(false);
 
     const [isOwner, setIsOwner] = useState<boolean>(false);
@@ -406,7 +408,12 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
               {/* Action Buttons */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <button
-                  onClick={() => setShowMyBid(!showMyBid)}
+                  onClick={() => {
+                    setShowMyBid(!showMyBid);
+                    //call function to get bid
+                    //setMyBid
+
+                  }}
                   className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2"
                 >
                   <User className="w-5 h-5" />
@@ -414,7 +421,11 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
                 </button>
 
                 <button
-                  onClick={() => setShowWinningAddress(!showWinningAddress)}
+                  onClick={() => {
+                    setShowWinningAddress(!showWinningAddress);
+                    //call function to get winningAddress
+                    //setWinningAddress
+                  }}
                   className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2"
                 >
                   <Wallet className="w-5 h-5" />
@@ -423,26 +434,28 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
               </div>
 
               {/* Information Panels (mybid is encrypted initially) */}
-              {/* {showMyBid && (
+              {showMyBid && (
                 <div className="bg-blue-500/20 border border-blue-500/30 rounded-2xl p-6">
                   <div className="flex items-center space-x-3 mb-2">
                     <User className="w-6 h-6 text-blue-400" />
                     <span className="text-blue-300 font-semibold">Your Current Bid</span>
                   </div>
-                  <div className="text-2xl font-bold text-white">{auction.myBid} ETH</div>
+                  <div className="text-2xl font-bold text-white">{myBid} CWETH</div>
+                  {/* read from contract and decrypt */}
                 </div>
-              )} */}
+              )}
 
                     {/* show winning address only when auction is over */}
-              {/* {showWinningAddress && (
+              {showWinningAddress && (
                 <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-2xl p-6">
                   <div className="flex items-center space-x-3 mb-2">
                     <Wallet className="w-6 h-6 text-yellow-400" />
                     <span className="text-yellow-300 font-semibold">Winning Address</span>
                   </div>
-                  <div className="text-lg font-mono text-white break-all">{auction.winningAddress}</div>
+                  <div className="text-lg font-mono text-white break-all">{winningAddress}</div>
+                  {/* read from contract ,is set after auction ends */}
                 </div>
-              )}  */}
+              )} 
             </div>
           </div>
         </div>
