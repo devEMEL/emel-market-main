@@ -25,7 +25,7 @@ const alchemy = new Alchemy({
 type Tab = 'live'  | 'ended' | 'cancelled';
 
 const query = gql`{
-  auctions(first: 100) {
+  auctions(first: 100, orderBy: blockTimestamp, orderDirection: desc) {
     id
     auctionId
     nftCA
@@ -64,7 +64,7 @@ const Home: React.FC = () => {
     
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {data?.auctions.map((auction: any, index: any) => (
-                auction.status == "AUCTIONED" && (<AuctionCard
+                (auction.status == "AUCTIONED" || auction.status == "BID") && (<AuctionCard
                 key={auction.transactionHash}
                 isAuctionPage={true}
                 auction={auction} 

@@ -2,8 +2,7 @@
 "use client"
 import React, { useEffect, useState } from 'react';
 import { Clock, User, Gavel, Trophy, Eye, Wallet, RefreshCw, Loader2 } from 'lucide-react';
-import { ethers } from "ethers";
-import EmelMarket from "@/abi/EmelMarket.json";
+import { ethers, getAddress } from "ethers";
 import { useEthersProvider, useEthersSigner } from '@/app/layout';
 import { useAccount } from 'wagmi';
 import Erc721Abi from "@/abi/Erc721.json";
@@ -12,6 +11,12 @@ import { useQuery } from '@tanstack/react-query';
 import { gql, request } from 'graphql-request';
 import { useImageLoader } from '@/hooks/useImageLoader';
 import { etherToWei, formatRelativeTime, getTimeLeft, truncateAddress } from '@/utils';
+import CWeth from "@/abi/CWeth.json";
+import EmelMarket from "@/abi/EmelMarket.json";
+import { useFhe } from '@/components/FheProvider';
+import { toast } from 'react-toastify';
+
+
 
 interface AuctionData {
   id: string;
@@ -89,7 +94,9 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
     const [auctionDuration, setAuctionDuration] = useState<string>("7");
     const [bidStatus, setBidStatus] = useState<string>("Place Bid");
     const [isPlacingBid, setIsPlacingBid] = useState<boolean>(false);
-    const [isApprovingWeth, setIsApprovingWeth] = useState<boolean>(false);
+    const [isApprovingWeth, setIsApprovingWeth] = useState<boolean>(false);  //CWETH instead...
+    const [isCancellingAuction, setIsCancellingAuction] = useState<boolean>(false);
+    const fhe = useFhe();
 
 
     const now = Math.floor(Date.now() / 1000);
@@ -130,53 +137,97 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
     // );
 
  const getButtonText = () => {
-    if (isApprovingWeth) return 'Approving WETH';
+    if (isApprovingWeth) return 'Approving CWETH';
     if (isPlacingBid) return 'Placing Bid...';
     return 'Place Bid';
-  };
-
-  const resetStates = () => {
-    setIsApprovingWeth(false);
-    setIsPlacingBid(false);
   };
 
     const isLoading = isApprovingWeth || isPlacingBid;
 
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    // e.preventDefault();
-    
 
-    try {
+  const handlePlaceBid = async() => {
+    try{
 
-      //use status for hook to display success or error message
-    } catch (error) {
-      
-    } 
-  };
 
-  const handlePlaceBid = () => {
     if (!bidAmount) return;
     const bidAmountInWei = etherToWei(bidAmount);
     console.log({bidAmount: bidAmountInWei});
 
     if (isLoading) return;
     
-    // Example flow: first approve WETH, then place bid
-    if (!isApprovingWeth && !isPlacingBid) {
-      setIsApprovingWeth(true);
-      // Simulate WETH approval
-      setTimeout(() => {
+
+    setIsApprovingWeth(true);
+    const cWethContract = new ethers.Contract(
+        CWeth.address,
+        CWeth.abi,
+        signer
+    );
+    const until = now + 2000;
+    const cWethContractTx = await cWethContract.setOperator(EmelMarket.address, until);
+    const response = await cWethContractTx.wait();
+    console.log(response);
+
+        if (!fhe) {
+            console.log("Still loading...")
+        } else {
+            console.log("fhe is ready...");
+        };
+
+    if(response) {
         setIsApprovingWeth(false);
         setIsPlacingBid(true);
-        // Simulate placing bid
-        setTimeout(() => {
-          setIsPlacingBid(false);
-        }, 2000);
-      }, 2000);
+
+        const emelMarketContract = new ethers.Contract(
+            EmelMarket.address,
+            EmelMarket.abi,
+            signer
+        );   
+
+
+    const encryptedValue = await fhe
+      .createEncryptedInput(EmelMarket.address, address)
+      .add64(BigInt(bidAmountInWei))
+      .encrypt();
+    console.log({encryptedValue});
+
+        const encryptedAmount = encryptedValue.handles[0];
+        const inputProof = encryptedValue.inputProof;
+        const bidTx = await emelMarketContract.bid(data?.auctions[0].auctionId, encryptedAmount, inputProof);
+        const resp = await bidTx.wait();
+        console.log(resp);
+
+
+    }
+
+    toast.success("Bid Placed Successfully");
+    setIsPlacingBid(false);
+    } catch (err) {
+        console.error(err);
+        toast.error("Failed to place bid");
     }
 
   };
+
+    const handleCancelAuction = async() => {
+        try {
+            setIsCancellingAuction(true);
+            const emelMarketContract = new ethers.Contract(
+                EmelMarket.address,
+                EmelMarket.abi,
+                signer
+            );
+    
+            const emelMarketContractTx = await emelMarketContract.cancelAuction(BigInt(data?.auctions[0].auctionId));
+            const response = await emelMarketContractTx.wait();
+            console.log(response);
+
+            toast.success("Auction cancelled successfully");
+            setIsCancellingAuction(false);
+        } catch(err) {
+            console.log(err);
+        }
+    }
 
 
   useEffect(() => {
@@ -329,7 +380,7 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
                     >
                       {/* <RefreshCw className="w-5 h-5 animate-spin" />
                       <span>{bidStatus}</span> */}
-                      {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                      {isLoading && <Loader2 className="w-5 h-5 animate-spin" />}
                       {getButtonText()}
                     </button>
                   </div>
@@ -339,9 +390,21 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
 
 
               {/* cancel bid if owner */}
+              {address && data?.auctions[0]?.seller && getAddress(String(address)) === getAddress(data?.auctions[0].seller) && (
+                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+                    <button
+                      onClick={handleCancelAuction}
+                      className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105"
+                    >
+
+                        {isCancellingAuction ? "Cancelling Bid..." : "Cancel Bid"}
+                    </button>
+                </div>
+              )}
+
 
               {/* Action Buttons */}
-              {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <button
                   onClick={() => setShowMyBid(!showMyBid)}
                   className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2"
@@ -351,21 +414,13 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
                 </button>
 
                 <button
-                  onClick={() => setShowWinningBid(!showWinningBid)}
-                  className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2"
-                >
-                  <Trophy className="w-5 h-5" />
-                  <span>Winning Bid</span>
-                </button>
-
-                <button
                   onClick={() => setShowWinningAddress(!showWinningAddress)}
                   className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2"
                 >
                   <Wallet className="w-5 h-5" />
                   <span>Winner</span>
                 </button>
-              </div> */}
+              </div>
 
               {/* Information Panels (mybid is encrypted initially) */}
               {/* {showMyBid && (
