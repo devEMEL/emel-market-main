@@ -2,7 +2,8 @@ import {
   AuctionCancelled as AuctionCancelledEvent,
   AuctionCreated as AuctionCreatedEvent,
   BidPlaced as BidPlacedEvent,
-  NFTClaimed as NFTClaimedEvent
+  NFTClaimed as NFTClaimedEvent,
+  AuctionResolved as AuctionResolvedEvent
 } from "../generated/FHEEmelMarket/FHEEmelMarket";
 import { Auction } from "../generated/schema";
     
@@ -67,4 +68,19 @@ export function handleNFTClaimed(event: NFTClaimedEvent): void {
   }
   
 }
+
+export function handleAuctionResolved(event: AuctionResolvedEvent): void {
+  let id = event.address.toHexString() + "-" + event.params.auctionId.toString();
+  let auction = Auction.load(id);
+  // if auction exists
+  if(auction) {
+    auction.blockTimestamp = event.block.timestamp
+    auction.transactionHash = event.transaction.hash
+    auction.status = "DELETED"
+
+    auction.save()
+  }
+  
+}
+
 

@@ -224,6 +224,7 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard, ERC721Holder {
 
 
 // called first to set a. winnerAddress
+
   function decryptWinningAddress(uint256 auctionId) public onlyAfterEnd(auctionId) {
     Auction storage a = auctions[auctionId];
     bytes32[] memory cts = new bytes32[](1);

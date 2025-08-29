@@ -4,6 +4,7 @@ enum AuctionStatus {
     BID
     SOLD
     CANCELLED
+    DELETED
 }
 
 type Auction @entity {

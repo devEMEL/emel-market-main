@@ -29,5 +29,7 @@ dataSources:
           handler: handleBidPlaced
         - event: NFTClaimed(indexed uint256)
           handler: handleNFTClaimed
+        - event: AuctionResolved(indexed uint256)
+          handler: handleAuctionResolved
       file: ./src/fhe-emel-market.ts
 

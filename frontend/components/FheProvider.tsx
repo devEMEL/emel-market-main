@@ -12,8 +12,8 @@ export function FheProvider({ children }: { children: React.ReactNode }) {
 
         const { initSDK, createInstance, SepoliaConfig } = await import ('@zama-fhe/relayer-sdk/bundle')
         await initSDK(); 
-        const config = { ...SepoliaConfig, network: window.ethereum };
-        const fhe = await createInstance(config);
+        // const config = { ...SepoliaConfig, network: window.ethereum };
+        const fhe = await createInstance(SepoliaConfig);
 
       setInstance(fhe);
     })();

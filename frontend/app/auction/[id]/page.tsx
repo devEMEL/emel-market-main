@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Clock, User, Gavel, Trophy, Eye, Wallet, RefreshCw, Loader2 } from 'lucide-react';
 import { ethers, getAddress } from "ethers";
 import { useEthersProvider, useEthersSigner } from '@/app/layout';
-import { useAccount } from 'wagmi';
+import { useAccount, useChainId, usePublicClient, useWalletClient } from 'wagmi';
 import Erc721Abi from "@/abi/Erc721.json";
 import { Alchemy, Network } from 'alchemy-sdk';
 import { useQuery } from '@tanstack/react-query';
@@ -15,7 +15,7 @@ import CWeth from "@/abi/CWeth.json";
 import EmelMarket from "@/abi/EmelMarket.json";
 import { useFhe } from '@/components/FheProvider';
 import { toast } from 'react-toastify';
-
+import { Address } from "viem";
 
 
 interface AuctionData {
@@ -83,9 +83,9 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
 
     const [tokenDetails, setTokenDetails] = useState<any>({});
     const [bidAmount, setBidAmount] = useState('');
-    const [myBid, setMyBid] = useState('0.001');
+    const [myBid, setMyBid] = useState('0');
     const [showMyBid, setShowMyBid] = useState(false);
-    const [winningAddress, setWinningAddress] = useState('0x2345');
+    const [winningAddress, setWinningAddress] = useState('');
     const [showWinningAddress, setShowWinningAddress] = useState(false);
 
     const [isOwner, setIsOwner] = useState<boolean>(false);
@@ -97,6 +97,8 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
     const [bidStatus, setBidStatus] = useState<string>("Place Bid");
     const [isPlacingBid, setIsPlacingBid] = useState<boolean>(false);
     const [isApprovingWeth, setIsApprovingWeth] = useState<boolean>(false);  //CWETH instead...
+    const [isGettingWinner, setIsGettingWinner] = useState<boolean>(false);
+    const [isResolvingAndRefundingLosers, setIsResolvingAndRefundingLosers] = useState<boolean>(false);
     const [isCancellingAuction, setIsCancellingAuction] = useState<boolean>(false);
     const fhe = useFhe();
 
@@ -109,8 +111,12 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
     // display time left..........
 
     const provider = useEthersProvider();
-    const signer = useEthersSigner()
+    const signer = useEthersSigner();
     const { address } = useAccount();
+    const chainId = useChainId();
+    const { data: walletClient } = useWalletClient();
+    const publicClient = usePublicClient({ chainId });
+    
 
 
     const getUserTokenDetails = async() => {
@@ -144,7 +150,15 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
     return 'Place Bid';
   };
 
+  const getWinnerButtonText = () => {
+    if (isGettingWinner) return 'Getting Winner';
+    if (isResolvingAndRefundingLosers) return 'REsolving and Refunding Losers';
+    return 'Get Winner';
+  }
+
     const isLoading = isApprovingWeth || isPlacingBid;
+    const isWinnerLoading = isGettingWinner || isResolvingAndRefundingLosers;
+
 
 
 
@@ -211,6 +225,38 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
 
   };
 
+    const handleGetWinner = async() => {
+
+        console.log("Getting Winner...");
+
+        const emelMarketContract = new ethers.Contract(
+            EmelMarket.address,
+            EmelMarket.abi,
+            signer
+        );
+    
+        setIsGettingWinner(true);
+
+        const emelMarketContractTx = await emelMarketContract.decryptWinningAddress(BigInt(data?.auctions[0].auctionId));
+        const response = await emelMarketContractTx.wait();
+        console.log(response);
+
+        setIsGettingWinner(false);
+        
+
+        if(response) {
+            setIsResolvingAndRefundingLosers(true);
+
+            const resolveTx = await emelMarketContract.resolveAndRefundLosers(BigInt(data?.auctions[0].auctionId));
+            const resp = await resolveTx.wait();
+            console.log({resp});
+
+            setIsResolvingAndRefundingLosers(false);
+
+        }
+        
+    }
+
     const handleCancelAuction = async() => {
         try {
             setIsCancellingAuction(true);
@@ -229,6 +275,103 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
         } catch(err) {
             console.log(err);
         }
+    }
+
+     const handleShowMyBid = async() => {
+        
+        console.log("handleShowMyBid");
+        setShowMyBid(true);
+
+ 
+
+        let value = BigInt(0);
+        const [ciphertextHandle] = await publicClient!.multicall({
+        contracts: [
+          {
+            address: EmelMarket.address as Address,
+            abi: EmelMarket.abi,
+            functionName: "getEncryptedBid",
+            args: [data?.auctions[0].auctionId, address as Address],
+          },
+        ],
+        allowFailure: false,
+      });
+      console.log({ciphertextHandle});
+
+
+        //  const emelMarketContract = new ethers.Contract(
+        //     EmelMarket.address,
+        //     EmelMarket.abi,
+        //     provider
+        // );  
+
+        // const emelMarketContractTx = await emelMarketContract.getEncryptedBid(data?.auctions[0].auctionId, address);
+        // console.log({emelMarketContractTx});
+
+        // decrypt value
+       
+        const keypair = fhe!.generateKeypair();
+        const handleContractPairs = [
+            {
+                // handle: emelMarketContractTx.toString(),
+                handle: ciphertextHandle,
+                contractAddress: EmelMarket.address,
+            },
+        ];
+        const startTimeStamp = Math.floor(Date.now() / 1000).toString();
+        const durationDays = "1"; // String for consistency
+        const contractAddresses = [EmelMarket.address];
+
+        const eip712 = fhe!.createEIP712(
+            keypair.publicKey, 
+            contractAddresses, 
+            startTimeStamp, 
+            durationDays
+        );
+        
+        const signature = await signer!.signTypedData(
+            eip712.domain,
+            {
+                UserDecryptRequestVerification: eip712.types.UserDecryptRequestVerification,
+            },
+            eip712.message,
+        );
+
+
+        console.log('Signature:', signature);
+
+        const result = await fhe.userDecrypt(
+            handleContractPairs,
+            keypair.privateKey,
+            keypair.publicKey,
+            signature!.replace("0x", ""),
+            contractAddresses,
+            signer!.address,
+            startTimeStamp,
+            durationDays,
+        );
+        // value = result[ciphertextHandle] as bigint;
+        value = BigInt(result[ciphertextHandle]);
+
+        console.log({decryptedValue: value});
+
+        // setMyBid(value.toString());
+
+    }
+
+    const handleShowWinningAddress = async() => {
+        // clickable only when auction is ended
+        console.log("handleShowWinningAddress");
+        setShowWinningAddress(!showWinningAddress);
+
+        const emelMarketContract = new ethers.Contract(
+            EmelMarket.address,
+            EmelMarket.abi,
+            provider
+        );  
+        const winnerTx = await emelMarketContract.getWinnerAddress(data?.auctions[0].auctionId);
+        console.log({winnerTx});
+        setWinningAddress(winnerTx.toString());
     }
 
 
@@ -363,7 +506,15 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
                 </div>
               </div>
 
-              {/* Bidding Section */}
+{
+    data?.auctions[0].status === 'SOLD' ? (
+         <button
+            className="w-full bg-white text-black font-bold px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105"
+        >SOLD</button>
+    ) : (
+        <div>
+
+                      {/* Bidding Section */}
               {data?.auctions[0].endTime > now && (
                 <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
                   <h3 className="text-xl font-bold text-white mb-4">Place Your Bid</h3>
@@ -378,7 +529,7 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
                     />
                     <button
                       onClick={handlePlaceBid}
-                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105"
+                      className="bg-white text-black font-bold px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105"
                     >
                       {/* <RefreshCw className="w-5 h-5 animate-spin" />
                       <span>{bidStatus}</span> */}
@@ -396,7 +547,7 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
                 <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
                     <button
                       onClick={handleCancelAuction}
-                      className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105"
+                      className="w-full bg-white text-black font-bold px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105"
                     >
 
                         {isCancellingAuction ? "Cancelling Bid..." : "Cancel Bid"}
@@ -404,16 +555,30 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
                 </div>
               )}
 
+               {/* Get winner */}
+                {data?.auctions[0].endTime < now && (
+                    <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+                    <button
+                      onClick={handleGetWinner}
+                      className="w-full bg-white text-black font-bold px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105"
+                    >
+
+                        {isWinnerLoading && <Loader2 className="w-5 h-5 animate-spin" />}
+                      {getWinnerButtonText()}
+                    </button>
+                </div>
+                )}
+         </div>
+    )
+}
+
+
+               
 
               {/* Action Buttons */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <button
-                  onClick={() => {
-                    setShowMyBid(!showMyBid);
-                    //call function to get bid
-                    //setMyBid
-
-                  }}
+                  onClick={handleShowMyBid}
                   className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2"
                 >
                   <User className="w-5 h-5" />
@@ -421,15 +586,12 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
                 </button>
 
                 <button
-                  onClick={() => {
-                    setShowWinningAddress(!showWinningAddress);
-                    //call function to get winningAddress
-                    //setWinningAddress
-                  }}
+                  onClick={handleShowWinningAddress}
                   className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2"
                 >
                   <Wallet className="w-5 h-5" />
-                  <span>Winner</span>
+                  <span>Winner</span> 
+                  {/* {button clickable only after auction is resolved} */}
                 </button>
               </div>
 
