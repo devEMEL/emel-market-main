@@ -78,45 +78,67 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard, ERC721Holder {
         auctionCount++;
     }
 
+
     function bid(uint256 auctionId, externalEuint64 encryptedAmount, bytes calldata proof) external onlyDuringAuction(auctionId) nonReentrant {
         Auction storage a = auctions[auctionId];
-
+        
         require(nftOnAuction[a.nftContract][a.tokenId], "NFT not on auction");
-
-
-        // At least one bid makes it active to prevent cancelling
+        
         if(!a.isActive) {
             a.isActive = true;
         }
-
-        // Get encrypted bid
+        
+        // Get encrypted bid and grant permission
         euint64 amount = FHE.fromExternal(encryptedAmount, proof);
-
+        FHE.allowThis(amount); // 
 
         // Transfer cWETH to contract
         FHE.allowTransient(amount, address(paymentToken));
         euint64 transferred = paymentToken.confidentialTransferFrom(msg.sender, address(this), amount);
-
-        // Update bid
-        if(!FHE.isInitialized(a.bids[msg.sender])) {
+        FHE.allowThis(transferred); 
+        
+        // Handle bid update with proper initialization check
+        bool isFirstBid = !FHE.isInitialized(a.bids[msg.sender]);
+        
+        if (isFirstBid) {
+            // First bid from this user
+            a.bids[msg.sender] = transferred;
             a.bidders.push(msg.sender);
+        } else {
+            // User has bid before - grant permission to existing bid first
+            FHE.allowThis(a.bids[msg.sender]);
+            a.bids[msg.sender] = FHE.add(a.bids[msg.sender], transferred);
         }
-        a.bids[msg.sender] = FHE.add(a.bids[msg.sender], transferred);
-
-
+    
+        // Grant permissions for the updated bid
         FHE.allowThis(a.bids[msg.sender]);
         FHE.allow(a.bids[msg.sender], msg.sender);
-
-        ebool newWinner = FHE.lt(a.highestBid, a.bids[msg.sender]);
-        a.highestBid = FHE.select(newWinner, a.bids[msg.sender], a.highestBid);
-        a.winningAddress = FHE.select(newWinner, FHE.asEaddress(msg.sender), a.winningAddress);
-
+        
+        // Handle highest bid update
+        bool isFirstBidEver = !FHE.isInitialized(a.highestBid);
+        
+        if (isFirstBidEver) {
+            // This is the first bid in the auction
+            a.highestBid = a.bids[msg.sender];
+            a.winningAddress = FHE.asEaddress(msg.sender);
+        } else {
+            // Grant permission to existing highest bid
+            FHE.allowThis(a.highestBid);
+            FHE.allowThis(a.winningAddress);
+            
+            ebool newWinner = FHE.lt(a.highestBid, a.bids[msg.sender]);
+            a.highestBid = FHE.select(newWinner, a.bids[msg.sender], a.highestBid);
+            a.winningAddress = FHE.select(newWinner, FHE.asEaddress(msg.sender), a.winningAddress);
+        }
+    
+        // Grant final permissions
         FHE.allowThis(a.highestBid);
         FHE.allowThis(a.winningAddress);
-
+        FHE.allow(a.highestBid, msg.sender);
+        FHE.allow(a.winningAddress, msg.sender);
+        
         emit BidPlaced(auctionId);
-
-    }
+}
 
    function resolveAndRefundLosers(uint256 auctionId) 
     external 

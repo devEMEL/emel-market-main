@@ -128,6 +128,51 @@ contract old is SepoliaConfig, ReentrancyGuard, ERC721Holder {
         emit BidPlaced(auctionId);
     }
 
+       // function bid(uint256 auctionId, externalEuint64 encryptedAmount, bytes calldata proof) external onlyDuringAuction(auctionId) nonReentrant {
+    //     Auction storage a = auctions[auctionId];
+
+    //     require(nftOnAuction[a.nftContract][a.tokenId], "NFT not on auction");
+
+
+    //     // At least one bid makes it active to prevent cancelling
+    //     if(!a.isActive) {
+    //         a.isActive = true;
+    //     }
+
+    //     // Get encrypted bid
+    //     euint64 amount = FHE.fromExternal(encryptedAmount, proof);
+    //     // FHE.allowThis(amount);
+    //     // Transfer cWETH to contract
+    //     FHE.allowTransient(amount, address(paymentToken));
+    //     euint64 transferred = paymentToken.confidentialTransferFrom(msg.sender, address(this), amount);
+        
+    //     FHE.allowThis(a.bids[msg.sender]);
+    //     FHE.allow(a.bids[msg.sender], msg.sender);
+    //     FHE.allowThis(a.highestBid);
+    //     FHE.allow(a.highestBid, msg.sender);
+    //     FHE.allowThis(a.winningAddress);
+    //     FHE.allow(a.winningAddress, msg.sender);
+
+    //     // Update bid
+    //     if(!FHE.isInitialized(a.bids[msg.sender])) {
+    //         a.bidders.push(msg.sender);
+    //     }
+
+    //     a.bids[msg.sender] = FHE.add(a.bids[msg.sender], transferred);
+
+
+        
+
+    //     ebool newWinner = FHE.lt(a.highestBid, a.bids[msg.sender]);
+    //     a.highestBid = FHE.select(newWinner, a.bids[msg.sender], a.highestBid);
+    //     a.winningAddress = FHE.select(newWinner, FHE.asEaddress(msg.sender), a.winningAddress);
+
+        
+
+    //     emit BidPlaced(auctionId);
+
+    // }
+
    function resolveAndRefundLosers(uint256 auctionId) 
     external 
     onlyAfterEnd(auctionId) 

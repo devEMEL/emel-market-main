@@ -15,7 +15,7 @@ contract SimpleNFT is ERC721, ERC721URIStorage, ERC721Enumerable {
     function mint(string memory _tokenURI) public {
         _nextTokenId++;
         _safeMint(msg.sender, _nextTokenId);
-         _setTokenURI(_nextTokenId, _tokenURI);
+        _setTokenURI(_nextTokenId, _tokenURI);
     }
 
 
