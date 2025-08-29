@@ -9,7 +9,7 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 
 import {cWETH} from "./cWETH.sol";
 
-contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard, ERC721Holder {
+contract old is SepoliaConfig, ReentrancyGuard, ERC721Holder {
     using FHE for *;
 
     struct Auction {
@@ -92,30 +92,40 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard, ERC721Holder {
         // Get encrypted bid
         euint64 amount = FHE.fromExternal(encryptedAmount, proof);
 
-
         // Transfer cWETH to contract
+        euint64 balanceBefore = paymentToken.balanceOf(address(this));
         FHE.allowTransient(amount, address(paymentToken));
-        euint64 transferred = paymentToken.confidentialTransferFrom(msg.sender, address(this), amount);
+        paymentToken.confidentialTransferFrom(msg.sender, address(this), amount);
+        euint64 balanceAfter = paymentToken.balanceOf(address(this));
+        euint64 sent = FHE.sub(balanceAfter, balanceBefore);
 
         // Update bid
-        if(!FHE.isInitialized(a.bids[msg.sender])) {
+        euint64 prevBid = a.bids[msg.sender];
+        if (FHE.isInitialized(prevBid)) {
+            a.bids[msg.sender] = FHE.add(prevBid, sent);
+        } else {
+            a.bids[msg.sender] = sent;
             a.bidders.push(msg.sender);
         }
-        a.bids[msg.sender] = FHE.add(a.bids[msg.sender], transferred);
 
+        euint64 currentBid = a.bids[msg.sender];
+        FHE.allowThis(currentBid);
+        FHE.allow(currentBid, msg.sender);
 
-        FHE.allowThis(a.bids[msg.sender]);
-        FHE.allow(a.bids[msg.sender], msg.sender);
-
-        ebool newWinner = FHE.lt(a.highestBid, a.bids[msg.sender]);
-        a.highestBid = FHE.select(newWinner, a.bids[msg.sender], a.highestBid);
-        a.winningAddress = FHE.select(newWinner, FHE.asEaddress(msg.sender), a.winningAddress);
+        // Update highest bid
+        if (FHE.isInitialized(a.highestBid)) {
+            ebool newWinner = FHE.lt(a.highestBid, currentBid);
+            a.highestBid = FHE.select(newWinner, currentBid, a.highestBid);
+            a.winningAddress = FHE.select(newWinner, FHE.asEaddress(msg.sender), a.winningAddress);
+        } else {
+            a.highestBid = currentBid;
+            a.winningAddress = FHE.asEaddress(msg.sender);
+        }
 
         FHE.allowThis(a.highestBid);
         FHE.allowThis(a.winningAddress);
 
         emit BidPlaced(auctionId);
-
     }
 
    function resolveAndRefundLosers(uint256 auctionId) 

@@ -574,23 +574,27 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
 
 
                
-
+     
+     
               {/* Action Buttons */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <button
-                  onClick={handleShowMyBid}
-                  className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2"
-                >
-                  <User className="w-5 h-5" />
-                  <span>My Bid</span>
+                { data?.auctions[0].status != 'SOLD' && (
+                    <button
+                    onClick={handleShowMyBid}
+                    className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2"
+                    >
+                    <User className="w-5 h-5" />
+                    <span>My Bid</span>
                 </button>
-
+ 
+                ) }
+                
                 <button
                   onClick={handleShowWinningAddress}
                   className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2"
                 >
                   <Wallet className="w-5 h-5" />
-                  <span>Winner</span> 
+                  <span>Show Winner</span> 
                   {/* {button clickable only after auction is resolved} */}
                 </button>
               </div>
@@ -607,7 +611,7 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
                 </div>
               )}
 
-                    {/* show winning address only when auction is over */}
+                {/* show winning address only when auction is over */}
               {showWinningAddress && (
                 <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-2xl p-6">
                   <div className="flex items-center space-x-3 mb-2">
