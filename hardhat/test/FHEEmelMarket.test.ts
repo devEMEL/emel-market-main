@@ -1,5 +1,5 @@
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-import { ethers, fhevm, deployments } from "hardhat";
+import { ethers, fhevm } from "hardhat";
 import { SimpleNFT, SimpleNFT__factory } from "../types";
 import { WETH9Mock, WETH9Mock__factory } from "../types";
 import { CWETH, CWETH__factory } from "../types";
@@ -139,11 +139,16 @@ describe("FHEEmelMarket Test", function () {
             await fheEmelMarketContract.connect(signers.deployer).bid(0, encryptedInput.handles[0], encryptedInput.inputProof);
             
 
-            // const auc2 = await fheEmelMarketContract.auctions(0);
-            // // read highestBid and decrypt it
-            // console.log({auc2})
-            // read winning address and decrypt it
+            const auc2 = await fheEmelMarketContract.auctions(0);
+            console.log({auc2})
+            const highestBid = auc2.highestBid;
+            console.log({highestBid})
+
             //read user bid value and decrypt it
+            const mybid = await fheEmelMarketContract.getEncryptedBid(0, signers.deployer.address);
+            console.log({mybid});
+            const myDecryptedBid = await fhevm.userDecryptEuint(FhevmType.euint64, mybid.toString(), fheEmelMarketContractAddress, signers.deployer);
+            console.log({myDecryptedBid})
             
 
         });

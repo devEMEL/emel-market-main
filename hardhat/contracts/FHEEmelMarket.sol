@@ -131,11 +131,12 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard, ERC721Holder {
             a.winningAddress = FHE.select(newWinner, FHE.asEaddress(msg.sender), a.winningAddress);
         }
     
-        // Grant final permissions
+        // Grant contract final permissions
         FHE.allowThis(a.highestBid);
         FHE.allowThis(a.winningAddress);
-        FHE.allow(a.highestBid, msg.sender);
-        FHE.allow(a.winningAddress, msg.sender);
+        
+        // FHE.allow(a.highestBid, msg.sender);
+        // FHE.allow(a.winningAddress, msg.sender);
         
         emit BidPlaced(auctionId);
 }
