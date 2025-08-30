@@ -6,7 +6,8 @@ import { CWETH, CWETH__factory } from "../types";
 import { FHEEmelMarket, FHEEmelMarket__factory } from "../types";
 import { expect } from "chai";
 import { FhevmType } from "@fhevm/hardhat-plugin";
-// import * as hre from "hardhat";
+import { time } from "@nomicfoundation/hardhat-network-helpers"
+import * as hre from "hardhat";
 
 type Signers = {
   deployer: HardhatEthersSigner;
@@ -94,13 +95,16 @@ describe("FHEEmelMarket Test", function () {
         it("mints nft, create auction, place bid", async function () {
             // mint nft
             await SimpleNFTContract.connect(signers.deployer).mint("akabekechua");
+            await SimpleNFTContract.connect(signers.acc1).mint("akabekechua");
             // get nft token id (1) and ca (SimpleNFTContractAddress)
             // approve contract to spend our token
             await SimpleNFTContract.connect(signers.deployer).approve(fheEmelMarketContractAddress, 1);
+            await SimpleNFTContract.connect(signers.acc1).approve(fheEmelMarketContractAddress, 2);
 
             const startTime = Math.floor(Date.now() / 1000); // start now
             const endTime = Math.floor(Date.now() / 1000) + 120; // end in 2 minutes
             await fheEmelMarketContract.connect(signers.deployer).createAuction(SimpleNFTContractAddress, 1, startTime, endTime);
+
             // get auction
             const auc= await fheEmelMarketContract.auctions(0);
             console.log({auc});
@@ -111,15 +115,21 @@ describe("FHEEmelMarket Test", function () {
             // console.log({ethBalance});
             const wethBalanceBefore = await WETH9MockContract.balanceOf(signers.deployer.address);
             await WETH9MockContract.deposit({ value: ethers.parseEther("0.5")});
+            await WETH9MockContract.connect(signers.acc1).deposit({ value: ethers.parseEther("0.5")});
             //read weth balance
             const wethBalanceAfter = await WETH9MockContract.balanceOf(signers.deployer.address);
             console.log({wethBalanceBefore})
             console.log({wethBalanceAfter})
             expect(wethBalanceAfter).to.be.gt(wethBalanceBefore);
 
-            const cWethBalanceBefore = await CWETHContract.balanceOf(signers.deployer.address)
+            const cWethBalanceBefore = await CWETHContract.balanceOf(signers.deployer.address);
+            await fhevm.awaitDecryptionOracle();
+
             await WETH9MockContract.approve(CWETHContractAddress, ethers.parseEther("0.4"))
-            await CWETHContract.wrap(signers.deployer.address, ethers.parseEther("0.4"))
+            await CWETHContract.wrap(signers.deployer.address, ethers.parseEther("0.4"));
+
+            await WETH9MockContract.connect(signers.acc1).approve(CWETHContractAddress, ethers.parseEther("0.4"))
+            await CWETHContract.connect(signers.acc1).wrap(signers.acc1.address, ethers.parseEther("0.4"));
 
            //check cweth balance
            const cWethBalanceAfter = await CWETHContract.balanceOf(signers.deployer.address);
@@ -137,19 +147,64 @@ describe("FHEEmelMarket Test", function () {
             .encrypt();
 
             await fheEmelMarketContract.connect(signers.deployer).bid(0, encryptedInput.handles[0], encryptedInput.inputProof);
+
+            //2
+            await CWETHContract.connect(signers.acc1).setOperator(fheEmelMarketContractAddress, until)
+            const encryptedInput2 = await fhevm
+            .createEncryptedInput(fheEmelMarketContractAddress, signers.acc1.address)
+            .add64(BigInt(ethers.parseEther("0.3")))
+            .encrypt();
+
+            await fheEmelMarketContract.connect(signers.acc1).bid(0, encryptedInput2.handles[0], encryptedInput2.inputProof);
+
             
 
             const auc2 = await fheEmelMarketContract.auctions(0);
             console.log({auc2})
-            const highestBid = auc2.highestBid;
-            console.log({highestBid})
+            // const highestBid = auc2.highestBid;
+            // console.log({highestBid})
+            // decrypt highestbid
 
-            //read user bid value and decrypt it
+            //1
+            // const highestBid = await fheEmelMarketContract.getHighestBid(0);
+            // console.log({highestBid})
+            // const decryptedHighestBid = await fhevm.userDecryptEuint(FhevmType.euint64, highestBid, fheEmelMarketContractAddress, signers.deployer);
+            // console.log({ decryptedHighestBid });
+
+            //2
+            // get winningAddress
+            // const winningAddress = await fheEmelMarketContract.getWinningAddress(0);
+            // console.log({winningAddress})
+            // const decryptedWinningAddress = await fhevm.userDecryptEaddress(winningAddress, fheEmelMarketContractAddress, signers.deployer);
+            // console.log({ decryptedWinningAddress });
+
+
+            //3
+            // read user bid value and decrypt it
             const mybid = await fheEmelMarketContract.getEncryptedBid(0, signers.deployer.address);
-            console.log({mybid});
-            const myDecryptedBid = await fhevm.userDecryptEuint(FhevmType.euint64, mybid.toString(), fheEmelMarketContractAddress, signers.deployer);
-            console.log({myDecryptedBid})
+            console.log({ mybid });
+            const myDecryptedBid = await fhevm.userDecryptEuint(FhevmType.euint64, mybid, fheEmelMarketContractAddress, signers.deployer);
+            console.log({myDecryptedBid});
+           
             
+
+            // decryptWinningAddress and set it to winner address
+            //
+            await time.increase(3 * 60);
+            let tx = await fheEmelMarketContract.decryptWinningAddress(0);
+            let receipt = await tx.wait();
+  
+            // Wait for FHEVM decryption oracle to complete all decryption requests
+            await fhevm.awaitDecryptionOracle();
+
+            const winner = (await fheEmelMarketContract.auctions(0)).winnerAddress;
+            console.log({winner});
+            // get auction again
+            const auc3 = await fheEmelMarketContract.getBidders(0);
+            console.log({auc3})
+
+    
+
 
         });
     });

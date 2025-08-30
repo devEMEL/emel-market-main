@@ -7,6 +7,7 @@ import { useAccount, useBalance } from 'wagmi';
 import Link from 'next/link';
 import { Network, Alchemy } from "alchemy-sdk";
 import { formatRelativeTime, truncateAddress, getTimeLeft } from '@/utils';
+import { SUBGRAPH_URL } from '@/utils';
 
 import { useQuery } from '@tanstack/react-query';
 import { gql, request } from 'graphql-request';
@@ -36,7 +37,6 @@ const query = gql`{
   }
 }`
 // use nftCA and tokenId to get name, symbol and uri
-const url = 'https://api.studio.thegraph.com/query/119165/emelmarket/version/latest'
 const headers = { Authorization: 'Bearer {api-key}' }
 
 
@@ -124,7 +124,7 @@ const page = () => {
   const { data } = useQuery({
     queryKey: ['data'],
     async queryFn() {
-      return await request(url, query, {}, headers)
+      return await request(SUBGRAPH_URL, query, {}, headers)
     }
   })
 

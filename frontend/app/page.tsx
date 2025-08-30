@@ -8,7 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { gql, request } from 'graphql-request';
 import { Timer, CheckCircle, XCircle } from 'lucide-react';
 import AuctionCard from '@/components/AuctionCard';
-
+import { SUBGRAPH_URL } from '@/utils';
 
 interface Collection {
   contractAddress: string;
@@ -40,7 +40,7 @@ const query = gql`{
   }
 }`
 
-const url = 'https://api.studio.thegraph.com/query/119165/emelmarket/version/latest'
+
 const headers = { Authorization: 'Bearer {api-key}' }
 
 const Home: React.FC = () => {
@@ -56,7 +56,7 @@ const Home: React.FC = () => {
       const { data } = useQuery({
         queryKey: ['data'],
         async queryFn() {
-          return await request(url, query, {}, headers)
+          return await request(SUBGRAPH_URL, query, {}, headers)
         }
       })
 

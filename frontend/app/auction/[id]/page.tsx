@@ -16,7 +16,7 @@ import EmelMarket from "@/abi/EmelMarket.json";
 import { useFhe } from '@/components/FheProvider';
 import { toast } from 'react-toastify';
 import { Address } from "viem";
-
+import { SUBGRAPH_URL } from '@/utils';
 
 interface AuctionData {
   id: string;
@@ -47,7 +47,7 @@ const alchemy = new Alchemy({
 });
 
 
-const url = 'https://api.studio.thegraph.com/query/119165/emelmarket/version/latest';
+
 const headers = { Authorization: 'Bearer {api-key}' };
 
 const page: React.FC<AuctionPageProps> = ({ params }) => {
@@ -76,7 +76,7 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
     const { data, isSuccess } = useQuery({
         queryKey: ['auction-page-data'],
         async queryFn() {
-            return await request(url, query, { id }, headers)
+            return await request(SUBGRAPH_URL, query, { id }, headers)
         }
     });
     
@@ -285,28 +285,43 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
  
 
         let value = BigInt(0);
-        const [ciphertextHandle] = await publicClient!.multicall({
-        contracts: [
-          {
-            address: EmelMarket.address as Address,
-            abi: EmelMarket.abi,
-            functionName: "getEncryptedBid",
-            args: [data?.auctions[0].auctionId, address as Address],
-          },
-        ],
-        allowFailure: false,
-      });
-      console.log({ciphertextHandle});
+    //     const [ciphertextHandle] = await publicClient!.multicall({
+    //     contracts: [
+    //       {
+    //         address: EmelMarket.address as Address,
+    //         abi: EmelMarket.abi,
+    //         functionName: "getEncryptedBid",
+    //         args: [data?.auctions[0].auctionId, address as Address],
+    //       },
+    //     ],
+    //     allowFailure: false,
+    //   });
+    //   console.log({ciphertextHandle});
+
+      // try 
+      // get auction
+    //   const [auction] = await publicClient!.multicall({
+    //     contracts: [
+    //       {
+    //         address: EmelMarket.address as Address,
+    //         abi: EmelMarket.abi,
+    //         functionName: "auctions",
+    //         args: [0],
+    //       },
+    //     ],
+    //     allowFailure: false,
+    //     });
+    //   console.log({auction});
 
 
-        //  const emelMarketContract = new ethers.Contract(
-        //     EmelMarket.address,
-        //     EmelMarket.abi,
-        //     provider
-        // );  
+         const emelMarketContract = new ethers.Contract(
+            EmelMarket.address,
+            EmelMarket.abi,
+            provider
+        );  
 
-        // const emelMarketContractTx = await emelMarketContract.getEncryptedBid(data?.auctions[0].auctionId, address);
-        // console.log({emelMarketContractTx});
+        const ciphertextHandle = await emelMarketContract.getEncryptedBid(data?.auctions[0].auctionId, address);
+        console.log({ciphertextHandle});
 
         // decrypt value
        
@@ -543,7 +558,7 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
 
 
               {/* cancel bid if owner */}
-              {address && data?.auctions[0]?.seller && getAddress(String(address)) === getAddress(data?.auctions[0].seller) && (
+              {address && data?.auctions[0]?.seller && getAddress(String(address)) === getAddress(data?.auctions[0].seller) && data?.auctions[0].status == "AUCTIONED" && (
                 <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
                     <button
                       onClick={handleCancelAuction}
@@ -556,7 +571,7 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
               )}
 
                {/* Get winner */}
-                {data?.auctions[0].endTime < now && (
+                {data?.auctions[0].endTime < now && getAddress(String(address)) === getAddress(data?.auctions[0].seller) && (
                     <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
                     <button
                       onClick={handleGetWinner}

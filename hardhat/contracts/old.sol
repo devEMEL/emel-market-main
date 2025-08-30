@@ -290,4 +290,23 @@ contract old is SepoliaConfig, ReentrancyGuard, ERC721Holder {
 
   }
 
+
+
+
+
+     function getHighestBid(uint256 auctionId) external view returns (euint64) {
+        Auction storage a = auctions[auctionId];
+        return a.highestBid;
+    }
+
+    function getWinningAddress(uint256 auctionId) external view returns (eaddress) {
+        Auction storage a = auctions[auctionId];
+        return a.winningAddress;
+
+    }
+
+    function getBidders(uint256 auctionId) external view returns (address[] memory) {
+        return auctions[auctionId].bidders;
+    }
+
 }

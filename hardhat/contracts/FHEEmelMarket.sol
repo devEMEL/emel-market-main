@@ -39,6 +39,7 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard, ERC721Holder {
     event AuctionResolved(uint256 indexed auctionId);
     event NFTClaimed(uint256 indexed auctionId);
     event AuctionCancelled(uint256 indexed auctionId);
+    event DecryptionRequested(address indexed user, uint256 indexed requestId, uint256 timestamp);
 
     constructor(address _paymentToken) {
         paymentToken = cWETH(_paymentToken);
@@ -68,7 +69,17 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard, ERC721Holder {
         a.endTime = endTime;
         a.beneficiary = msg.sender;
         a.isActive = false;
+        a.nftClaimed = false;
         a.decryptionRequestId = 0;
+
+        // try
+        a.highestBid = FHE.asEuint64(0);
+        a.winningAddress = FHE.asEaddress(address(0));
+
+        // //try
+        // // grant permission
+        FHE.allowThis(a.highestBid);
+        FHE.allowThis(a.winningAddress);
 
         // Lock NFT
         IERC721(nftContract).safeTransferFrom(msg.sender, address(this), tokenId);
@@ -134,12 +145,14 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard, ERC721Holder {
         // Grant contract final permissions
         FHE.allowThis(a.highestBid);
         FHE.allowThis(a.winningAddress);
-        
-        // FHE.allow(a.highestBid, msg.sender);
-        // FHE.allow(a.winningAddress, msg.sender);
+
+        FHE.allow(a.highestBid, msg.sender);
+        FHE.allow(a.winningAddress, msg.sender);
         
         emit BidPlaced(auctionId);
 }
+
+
 
    function resolveAndRefundLosers(uint256 auctionId) 
     external 
@@ -214,17 +227,13 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard, ERC721Holder {
         return a.decryptionRequestId;
     }
 
-        // Helper to query a bidder's bid
-    function getBid(uint256 auctionId, address bidder) external view returns (euint64) {
-        return auctions[auctionId].bids[bidder];
-    }
 
 // get users bid on a particular auction
     function getEncryptedBid(uint256 auctionId, address account) external view returns (euint64) {
-        Auction storage a = auctions[auctionId];
-
+        Auction storage a = auctions[auctionId];  
         return a.bids[account];
    }
+
 
       /// @notice Get the winning address when the auction is ended
     /// @dev Can only be called after the winning address has been decrypted
@@ -240,11 +249,14 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard, ERC721Holder {
 
   function decryptWinningAddress(uint256 auctionId) public onlyAfterEnd(auctionId) {
     Auction storage a = auctions[auctionId];
+    require(msg.sender == a.beneficiary, "Only auction owner can get winner");
     bytes32[] memory cts = new bytes32[](1);
     cts[0] = FHE.toBytes32(a.winningAddress);
     uint256 requestId = FHE.requestDecryption(cts, this.resolveAuctionCallback.selector);
     a.decryptionRequestId = requestId;
     auctionIndexByRequestId[requestId] = auctionId;
+
+    emit DecryptionRequested(msg.sender, requestId, block.timestamp);
 
   }
 
@@ -258,4 +270,11 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard, ERC721Holder {
 
   }
 
+    function getBidders(uint256 auctionId) external view returns (address[] memory) {
+        return auctions[auctionId].bidders;
+    }
+
 }
+
+
+

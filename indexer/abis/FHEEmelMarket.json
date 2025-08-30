@@ -308,30 +308,6 @@
           "internalType": "uint256",
           "name": "auctionId",
           "type": "uint256"
-        },
-        {
-          "internalType": "address",
-          "name": "bidder",
-          "type": "address"
-        }
-      ],
-      "name": "getBid",
-      "outputs": [
-        {
-          "internalType": "euint64",
-          "name": "",
-          "type": "bytes32"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "auctionId",
-          "type": "uint256"
         }
       ],
       "name": "getDecryptionRequestId",
@@ -386,6 +362,40 @@
         }
       ],
       "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes",
+          "name": "",
+          "type": "bytes"
+        }
+      ],
+      "name": "onERC721Received",
+      "outputs": [
+        {
+          "internalType": "bytes4",
+          "name": "",
+          "type": "bytes4"
+        }
+      ],
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
