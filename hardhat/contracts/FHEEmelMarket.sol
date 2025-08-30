@@ -33,6 +33,9 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard, ERC721Holder {
     mapping(uint256 => Auction) public auctions;
     mapping(address => mapping(uint256 => bool)) private nftOnAuction;
     mapping(uint256 => uint256) internal auctionIndexByRequestId;
+    // auctionId => user => amount
+    mapping(uint256 => mapping(address => uint256)) private bidAmountReveal;
+    mapping(uint256 => uint256) internal bidAmountRevealIndexByRequestId;
 
     event AuctionCreated(uint256 indexed auctionId, address indexed nftCA, uint256 tokenId, address indexed seller, uint256 startTime, uint256 endTime);
     event BidPlaced(uint256 indexed auctionId);
@@ -195,7 +198,6 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard, ERC721Holder {
 
     // Mark NFT as claimed and cleanup
     a.nftClaimed = true;
-    delete auctions[auctionId];
 
 
     emit AuctionResolved(auctionId);
@@ -214,7 +216,6 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard, ERC721Holder {
         IERC721(a.nftContract).transferFrom(address(this), a.beneficiary, a.tokenId);
 
         nftOnAuction[a.nftContract][a.tokenId] = false;
-        delete auctions[auctionId];
 
         emit AuctionCancelled(auctionId);
     }
@@ -222,17 +223,44 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard, ERC721Holder {
 
 
     // Get decryption request ID for a proposal
-    function getDecryptionRequestId(uint256 auctionId) external view returns (uint256) {
-        Auction storage a = auctions[auctionId];
-        return a.decryptionRequestId;
-    }
+    // function getDecryptionRequestId(uint256 auctionId) external view returns (uint256) {
+    //     Auction storage a = auctions[auctionId];
+    //     return a.decryptionRequestId;
+    // }
 
 
 // get users bid on a particular auction
-    function getEncryptedBid(uint256 auctionId, address account) external view returns (euint64) {
+    function getEncryptedBid(uint256 auctionId, address account) public view returns (euint64) {
         Auction storage a = auctions[auctionId];  
         return a.bids[account];
    }
+
+    // only the caller can read their own amount for a given auction
+    function getDecryptedBid(uint256 auctionId) external view returns (uint256) {
+        return bidAmountReveal[auctionId][msg.sender];
+    }
+
+//  mapping(uint256 => mapping(address => uint256)) private bidAmountReveal;
+    // mapping(uint256 => uint256) internal bidAmountRevealIndexByRequestId;
+    function decryptUserBid(uint256 auctionId) public {
+       //get encrypted user bid        
+        euint64 userBid = getEncryptedBid(auctionId, msg.sender);
+
+        bytes32[] memory cts = new bytes32[](1);
+        cts[0] = FHE.toBytes32(userBid);
+        uint256 requestId = FHE.requestDecryption(cts, this.resolveDecryptedBidCallback.selector);
+        
+        bidAmountRevealIndexByRequestId[requestId] = auctionId;
+
+    }
+
+    function resolveDecryptedBidCallback(uint256 requestId, uint256 bidAmount, bytes[] memory signatures) public {
+        FHE.checkSignatures(requestId, signatures);
+
+        uint256 auctionId = bidAmountRevealIndexByRequestId[requestId];
+        bidAmountReveal[auctionId][msg.sender] = bidAmount;
+
+    }
 
 
       /// @notice Get the winning address when the auction is ended

@@ -277,98 +277,82 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
         }
     }
 
-     const handleShowMyBid = async() => {
+    const handleShowMyBid = async() => {
         
         console.log("handleShowMyBid");
-        setShowMyBid(true);
+        if(!showMyBid) {
+            setShowMyBid(true);
+        } else {
+            setShowMyBid(false); return;
+        }
 
- 
-
-        let value = BigInt(0);
-    //     const [ciphertextHandle] = await publicClient!.multicall({
-    //     contracts: [
-    //       {
-    //         address: EmelMarket.address as Address,
-    //         abi: EmelMarket.abi,
-    //         functionName: "getEncryptedBid",
-    //         args: [data?.auctions[0].auctionId, address as Address],
-    //       },
-    //     ],
-    //     allowFailure: false,
-    //   });
-    //   console.log({ciphertextHandle});
-
-      // try 
-      // get auction
-    //   const [auction] = await publicClient!.multicall({
-    //     contracts: [
-    //       {
-    //         address: EmelMarket.address as Address,
-    //         abi: EmelMarket.abi,
-    //         functionName: "auctions",
-    //         args: [0],
-    //       },
-    //     ],
-    //     allowFailure: false,
-    //     });
-    //   console.log({auction});
-
-
-         const emelMarketContract = new ethers.Contract(
+        
+        const emelMarketContract = new ethers.Contract(
             EmelMarket.address,
             EmelMarket.abi,
-            provider
+            signer
         );  
 
-        const ciphertextHandle = await emelMarketContract.getEncryptedBid(data?.auctions[0].auctionId, address);
-        console.log({ciphertextHandle});
+  
+        await emelMarketContract.decryptUserBid(data?.auctions[0].auctionId);
+        const userBid = await emelMarketContract.getDecryptedBid(data?.auctions[0].auctionId);
+        console.log({userBid});
+        setMyBid(userBid.toString());
+        
+        
+
+
+
+
+        // const ciphertextHandle =
+        // console.log({ciphertextHandle});
 
         // decrypt value
-       
-        const keypair = fhe!.generateKeypair();
-        const handleContractPairs = [
-            {
-                // handle: emelMarketContractTx.toString(),
-                handle: ciphertextHandle,
-                contractAddress: EmelMarket.address,
-            },
-        ];
-        const startTimeStamp = Math.floor(Date.now() / 1000).toString();
-        const durationDays = "1"; // String for consistency
-        const contractAddresses = [EmelMarket.address];
+        // let value = BigInt(0);
+        // const keypair = fhe!.generateKeypair();
+        // const handleContractPairs = [
+        //     {
+        //         // handle: emelMarketContractTx.toString(),
+        //         handle: ciphertextHandle,
+        //         contractAddress: EmelMarket.address,
+        //     },
+        // ];
+        // const startTimeStamp = Math.floor(Date.now() / 1000).toString();
+        // const durationDays = "1"; // String for consistency
+        // const contractAddresses = [EmelMarket.address];
 
-        const eip712 = fhe!.createEIP712(
-            keypair.publicKey, 
-            contractAddresses, 
-            startTimeStamp, 
-            durationDays
-        );
+        // const eip712 = fhe!.createEIP712(
+        //     keypair.publicKey, 
+        //     contractAddresses, 
+        //     startTimeStamp, 
+        //     durationDays
+        // );
         
-        const signature = await signer!.signTypedData(
-            eip712.domain,
-            {
-                UserDecryptRequestVerification: eip712.types.UserDecryptRequestVerification,
-            },
-            eip712.message,
-        );
+        // const signature = await signer!.signTypedData(
+        //     eip712.domain,
+        //     {
+        //         UserDecryptRequestVerification: eip712.types.UserDecryptRequestVerification,
+        //     },
+        //     eip712.message,
+        // );
 
 
-        console.log('Signature:', signature);
+        // console.log('Signature:', signature);
 
-        const result = await fhe.userDecrypt(
-            handleContractPairs,
-            keypair.privateKey,
-            keypair.publicKey,
-            signature!.replace("0x", ""),
-            contractAddresses,
-            signer!.address,
-            startTimeStamp,
-            durationDays,
-        );
+        // const result = await fhe.userDecrypt(
+        //     handleContractPairs,
+        //     keypair.privateKey,
+        //     keypair.publicKey,
+        //     signature!.replace("0x", ""),
+        //     contractAddresses,
+        //     signer!.address,
+        //     startTimeStamp,
+        //     durationDays,
+        // );
         // value = result[ciphertextHandle] as bigint;
-        value = BigInt(result[ciphertextHandle]);
+        // value = BigInt(result[ciphertextHandle]);
 
-        console.log({decryptedValue: value});
+        // console.log({decryptedValue: value});
 
         // setMyBid(value.toString());
 
@@ -443,7 +427,7 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
                 </div>
                 
-                {/* Status Badge */}
+                {/* Status Badge address  */}
                 <div className="absolute top-4 left-4">
                   <span className={`px-4 py-2 rounded-full text-sm font-semibold ${
                     data?.auctions[0].status == "AUCTIONED" 

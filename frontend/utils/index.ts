@@ -9,7 +9,7 @@ const pinata = new PinataSDK({
     pinataJwt: process.env.NEXT_PUBLIC_PINATA_JWT,
     pinataGateway: 'https://ipfs.io',
 });
-// https://api.studio.thegraph.com/query/119806/emel-market/version/latest
+
 export const SUBGRAPH_URL = "https://api.studio.thegraph.com/query/119806/emel-market/version/latest";
 export const zeroAddress = "0x0000000000000000000000000000000000000000";
 

@@ -180,28 +180,40 @@ describe("FHEEmelMarket Test", function () {
 
 
             //3
-            // read user bid value and decrypt it
-            const mybid = await fheEmelMarketContract.getEncryptedBid(0, signers.deployer.address);
-            console.log({ mybid });
-            const myDecryptedBid = await fhevm.userDecryptEuint(FhevmType.euint64, mybid, fheEmelMarketContractAddress, signers.deployer);
-            console.log({myDecryptedBid});
+            // rdecrypt user bid and read it
+            let tx = await fheEmelMarketContract.decryptUserBid(0);
+            await tx.wait();
+            await fhevm.awaitDecryptionOracle();
+
+            const myDecryptedBid = await fheEmelMarketContract.getDecryptedBid(0);
+            console.log({ myDecryptedBid });
+            const auc3 = await fheEmelMarketContract.auctions(0);
+            console.log({auc3})
+
+            
+
+
+            // remove
+            // const myDecryptedBid = await fhevm.userDecryptEuint(FhevmType.euint64, mybid, fheEmelMarketContractAddress, signers.deployer);
+            // console.log({myDecryptedBid});
            
             
 
             // decryptWinningAddress and set it to winner address
             //
             await time.increase(3 * 60);
-            let tx = await fheEmelMarketContract.decryptWinningAddress(0);
-            let receipt = await tx.wait();
+            let tx2 = await fheEmelMarketContract.decryptWinningAddress(0);
+            let receipt = await tx2.wait();
   
             // Wait for FHEVM decryption oracle to complete all decryption requests
             await fhevm.awaitDecryptionOracle();
 
+            let tx3 = await fheEmelMarketContract.resolveAndRefundLosers(0);
             const winner = (await fheEmelMarketContract.auctions(0)).winnerAddress;
             console.log({winner});
-            // get auction again
-            const auc3 = await fheEmelMarketContract.getBidders(0);
-            console.log({auc3})
+            // // get auction again
+            // const auc3 = await fheEmelMarketContract.getBidders(0);
+            // console.log({auc3})
 
     
 
