@@ -9,6 +9,10 @@ The marketplace leverages cutting-edge cryptographic technology to ensure that:
 - Only the auction winner and final amounts are revealed
 - All participants maintain privacy during the bidding process
 
+##### Demo Link: https://emel-market-main.vercel.app/get-cweth
+
+##### Demo Video: 
+
 ### 🌟 Key Features
 
 ##### Private Bidding System
