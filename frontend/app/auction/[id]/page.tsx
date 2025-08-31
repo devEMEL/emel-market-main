@@ -152,7 +152,7 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
 
   const getWinnerButtonText = () => {
     if (isGettingWinner) return 'Getting Winner';
-    if (isResolvingAndRefundingLosers) return 'REsolving and Refunding Losers';
+    if (isResolvingAndRefundingLosers) return 'Resolving and Refunding Losers';
     return 'Get Winner';
   }
 
