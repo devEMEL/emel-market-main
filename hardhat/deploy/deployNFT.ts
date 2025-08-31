@@ -22,4 +22,5 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 export default func;
 func.tags = ["nft"];
 
-// nft address = 0x000a90dAF3f051bA56bbB6597CEdfFf14da1d582
+// npx hardhat deploy --network sepolia --tags nft
+// nft address = 0x942474573f946C985394bCe6539Ab8895F233A2c

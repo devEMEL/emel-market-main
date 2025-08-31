@@ -28,7 +28,7 @@ const page = () => {
     const metadata = {
         name: "Cosmic Genesis", // next time
         description: " An extraordinary journey through the cosmos, captured in a single moment of stellar beauty. This unique piece represents the birth of new worlds and infinite possibilities.",
-        image: "ipfs://bafkreifmecajuvxhwavl5etrxzru5brpf5olvyuusndoow7xn6sbzf3pry",
+        image: "ipfs://bafkreiatjyx5hkzw4iciwuoj24yz56mng6ls2e6thcowhv4357p742asm4",
     };
     console.log(metadata);
     const tokenURI = await getTokenURI(metadata);

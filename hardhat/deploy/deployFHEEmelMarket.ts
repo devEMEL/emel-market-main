@@ -8,7 +8,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await getNamedAccounts();
   let cwethAddress: string;
 
-  cwethAddress = "";
+  cwethAddress = "0x648FdB91fF08251Be5AaC2AEaE3B0Dd8E12922d3";
 
 
   const fheEmelMarket = await deploy("FHEEmelMarket", {
@@ -28,4 +28,4 @@ export default func;
 func.tags = ["fheEmelMarket"];
 
 // npx hardhat deploy --network sepolia --tags fheEmelMarket
-// fheEmelMarket address = 0xa592C283b5d389E2e52d5363320448E95B75b838
+// fheEmelMarket address = 0xE9916c794D19C7627Efc24DefF825BBD9Aa0672D

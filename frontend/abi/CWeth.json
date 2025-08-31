@@ -1,15 +1,9 @@
 {
 
-    "address": "0xc87bf1921425FA34398Cc98e105DA889806024CB",
+    "address": "0x648FdB91fF08251Be5AaC2AEaE3B0Dd8E12922d3",
     "abi": [
     {
-      "inputs": [
-        {
-          "internalType": "contract IERC20",
-          "name": "underlyingToken",
-          "type": "address"
-        }
-      ],
+      "inputs": [],
       "stateMutability": "nonpayable",
       "type": "constructor"
     },
@@ -129,17 +123,6 @@
         }
       ],
       "name": "SafeCastOverflowedUintDowncast",
-      "type": "error"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "token",
-          "type": "address"
-        }
-      ],
-      "name": "SafeERC20FailedOperation",
       "type": "error"
     },
     {
@@ -516,6 +499,19 @@
     {
       "inputs": [
         {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        }
+      ],
+      "name": "deposit",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "euint64",
           "name": "encryptedAmount",
           "type": "bytes32"
@@ -567,7 +563,7 @@
           "type": "bytes[]"
         }
       ],
-      "name": "finalizeUnwrap",
+      "name": "finalizeWithdraw",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -607,40 +603,6 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "from",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bytes",
-          "name": "data",
-          "type": "bytes"
-        }
-      ],
-      "name": "onTransferReceived",
-      "outputs": [
-        {
-          "internalType": "bytes4",
-          "name": "",
-          "type": "bytes4"
-        }
-      ],
-      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
@@ -714,19 +676,6 @@
       "type": "function"
     },
     {
-      "inputs": [],
-      "name": "underlying",
-      "outputs": [
-        {
-          "internalType": "contract IERC20",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
       "inputs": [
         {
           "internalType": "address",
@@ -749,7 +698,7 @@
           "type": "bytes"
         }
       ],
-      "name": "unwrap",
+      "name": "withdraw",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -772,25 +721,7 @@
           "type": "bytes32"
         }
       ],
-      "name": "unwrap",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "to",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        }
-      ],
-      "name": "wrap",
+      "name": "withdraw",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"

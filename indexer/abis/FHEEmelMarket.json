@@ -135,31 +135,6 @@
       "inputs": [
         {
           "indexed": true,
-          "internalType": "address",
-          "name": "user",
-          "type": "address"
-        },
-        {
-          "indexed": true,
-          "internalType": "uint256",
-          "name": "requestId",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "timestamp",
-          "type": "uint256"
-        }
-      ],
-      "name": "DecryptionRequested",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
           "internalType": "uint256",
           "name": "auctionId",
           "type": "uint256"
@@ -322,19 +297,6 @@
           "type": "uint256"
         }
       ],
-      "name": "decryptUserBid",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "auctionId",
-          "type": "uint256"
-        }
-      ],
       "name": "decryptWinningAddress",
       "outputs": [],
       "stateMutability": "nonpayable",
@@ -367,7 +329,7 @@
           "type": "uint256"
         }
       ],
-      "name": "getDecryptedBid",
+      "name": "getDecryptionRequestId",
       "outputs": [
         {
           "internalType": "uint256",
@@ -460,7 +422,7 @@
       "name": "paymentToken",
       "outputs": [
         {
-          "internalType": "contract cWETH",
+          "internalType": "contract ConfidentialWETH",
           "name": "",
           "type": "address"
         }
@@ -500,29 +462,6 @@
         }
       ],
       "name": "resolveAuctionCallback",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "requestId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "bidAmount",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bytes[]",
-          "name": "signatures",
-          "type": "bytes[]"
-        }
-      ],
-      "name": "resolveDecryptedBidCallback",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
