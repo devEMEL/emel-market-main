@@ -131,7 +131,7 @@ describe("FHEEmelMarket Test", function () {
              console.log({until});
 
             //1
-            await CWETHContract.setOperator(fheEmelMarketContractAddress, until);
+            await CWETHContract.setOperator(fheEmelMarketContractAddress, BigInt(until));
             const encryptedInput = await fhevm
             .createEncryptedInput(fheEmelMarketContractAddress, signers.deployer.address)
             .add64(BigInt(ethers.parseEther("0.2")))

@@ -61,11 +61,8 @@ const page = () => {
           {/* Header */}
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 tracking-tight">
-              Cosmic Genesis
+              Bored Ape
             </h1>
-            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              A unique digital artwork from the depths of space, waiting to find its new owner
-            </p>
           </div>
 
           {/* Main Card */}
@@ -75,7 +72,7 @@ const page = () => {
               <div className="relative">
                 <div className="aspect-square rounded-2xl overflow-hidden shadow-2xl transform hover:scale-105 transition-all duration-500 ease-out">
                   <img
-                    src="https://images.pexels.com/photos/956999/milky-way-starry-sky-night-sky-star-956999.jpeg"
+                    src="https://ipfs.io/ipfs/bafkreiatjyx5hkzw4iciwuoj24yz56mng6ls2e6thcowhv4357p742asm4"
                     alt="Cosmic Genesis NFT"
                     className="w-full h-full object-cover"
                   />
@@ -87,10 +84,9 @@ const page = () => {
               {/* NFT Details */}
               <div className="space-y-8">
                 <div>
-                  <h2 className="text-3xl font-bold text-white mb-4">Cosmic Genesis</h2>
+                  <h2 className="text-3xl font-bold text-white mb-4">Bored Ape</h2>
                   <p className="text-gray-300 text-lg leading-relaxed">
-                    An extraordinary journey through the cosmos, captured in a single moment of stellar beauty. 
-                    This unique piece represents the birth of new worlds and infinite possibilities.
+                    Bored Ape Yacht Club is a collection of 10,000 unique digital apes living on the Ethereum blockchain.
                   </p>
                 </div>
 

@@ -180,7 +180,7 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
         signer
     );
     const until = now + 2000;
-    const cWethContractTx = await cWethContract.setOperator(EmelMarket.address, until);
+    const cWethContractTx = await cWethContract.setOperator(EmelMarket.address, BigInt(until));
     const response = await cWethContractTx.wait();
     console.log(response);
 
