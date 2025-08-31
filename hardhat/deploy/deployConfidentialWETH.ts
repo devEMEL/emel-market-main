@@ -7,21 +7,19 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const { deployer } = await getNamedAccounts();
 
-  // Deploy WETH9Mock (only for local/hardhat networks if you want to conditionally deploy)
-  // if (hre.network.name === "localhost" || hre.network.name === "hardhat") {
-  const weth = await deploy("WETH9Mock", {
+ 
+  // Deploy cWETH
+  const cweth = await deploy("ConfidentialWETH", {
     from: deployer,
     args: [],
     log: true,
     deterministicDeployment: false,
   });
 
-  console.log(`Deployer Address: ${deployer}`)
-  console.log(`WETH9Mock deployed to: ${weth.address}`);
-  // }
+  console.log(`CWETH deployed to: ${cweth.address}`);
 };
 
 export default func;
-func.tags = ["weth"];
+func.tags = ["cweth"];
 
-// npx hardhat deploy --network sepolia --tags weth
+// cweth address = 
