@@ -558,7 +558,7 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
      
               {/* Action Buttons */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                { data?.auctions[0].status != 'SOLD' && (
+                {/* { data?.auctions[0].status != 'SOLD' && (
                     <button
                     onClick={handleShowMyBid}
                     className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2"
@@ -567,7 +567,7 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
                     <span>My Bid</span>
                 </button>
  
-                ) }
+                ) } */}
                 
                 <button
                   onClick={handleShowWinningAddress}
