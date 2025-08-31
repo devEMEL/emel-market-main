@@ -23,4 +23,4 @@ export default func;
 func.tags = ["nft"];
 
 // npx hardhat deploy --network sepolia --tags nft
-// nft address = 0x942474573f946C985394bCe6539Ab8895F233A2c
+// nft address = 0xfe21a6188cDcdEe32Dc79cA56F5BE48F9A45022B

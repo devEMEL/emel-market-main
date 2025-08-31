@@ -36,7 +36,6 @@ const MyNFTCard: React.FC<MyNFTCardProps> = ({nft}) => {
     const [duration, setDuration] = useState("");
     const [isCreatingAuction, setIsCreatingAuction] = useState(false);
 
-    const { writeContractAsync, isPending, isSuccess } = useWriteContract();
 
     const provider = useEthersProvider();
     const signer = useEthersSigner();
@@ -101,22 +100,17 @@ const MyNFTCard: React.FC<MyNFTCardProps> = ({nft}) => {
   return (
      <div className="bg-gray-800/30 rounded-lg overflow-hidden">
                 <Link 
-                // href={{
-                //     pathname:`/auction/${nft.tokenId}`,
-                //     query: { nft: JSON.stringify(nft)}
                 href={""}
                 onClick={() => {
                     setShowModal(true);
                 }}
-                // }}
                 >
                 <img src={imageSrc} alt={nft.tokenName} className="w-full h-48 object-cover" />
                 <div className="p-4">
                     <h3 className="text-lg font-semibold">{nft.tokenName} #{nft.tokenId}</h3>
-                    {/* <p className="text-gray-400 text-sm">Token ID: {nft.tokenId}</p> */}
                     <p className="text-gray-400 text-sm truncate">CA: {truncateAddress(nft.contractAddress)}</p>
 
-                                <button
+                <button
                 type="submit"
                 className="w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-white/90 disabled:bg-white/50 mt-4"
             >
@@ -125,6 +119,7 @@ const MyNFTCard: React.FC<MyNFTCardProps> = ({nft}) => {
             </button>
                 </div>
                 </Link>
+                
                 {/* modal */}
                 {showModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50">

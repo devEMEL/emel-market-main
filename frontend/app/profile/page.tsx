@@ -168,16 +168,7 @@ const page = () => {
     // console.log({NFTs});
     getUserNFTs(alchemy, address).then(res => setUserNFTs(res));
   })
-  // NFTS FECHED FROM ALCHEMY API
-  // Auctions read from indexer
 
-//   if (nftsFetchLoading) return <p>Loading...</p>; // Loading Spinner
-//   if (nftsFetchError) return <p>Error : {nftsFetchError.message}</p>
-
-//   if(!NFTs) {
-//       return <p>No data available</p>
-//   }
-// {NFTs?.nfts.map((nft, index) => (
   const renderNFTGrid = () => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {userNFTs.map((nft, index) => (
@@ -232,7 +223,7 @@ const page = () => {
               </td>
               <td className="px-6 py-4">{tx.status}</td>
               <td className="px-6 py-4">{tx.tokenId}</td>
-              <td className="px-6 py-4 font-mono">{tx.nftCA}</td>
+              <td className="px-6 py-4 font-mono">{truncateAddress(tx.nftCA)}</td>
               <td className="px-6 py-4 font-mono">{truncateAddress(tx.seller)}</td>
               <td className="px-6 py-4">{formatRelativeTime(tx.blockTimestamp)}</td>
             </tr>

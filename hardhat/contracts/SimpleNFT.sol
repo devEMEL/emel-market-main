@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 contract SimpleNFT is ERC721, ERC721URIStorage, ERC721Enumerable {
     uint256 private _nextTokenId;
 
-    constructor() ERC721("Cosmic Genesis", "CMG") {}
+    constructor() ERC721("Bored Ape", "BAP") {}
 
     function mint(string memory _tokenURI) public {
         _nextTokenId++;

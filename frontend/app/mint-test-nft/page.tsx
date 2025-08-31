@@ -26,8 +26,8 @@ const page = () => {
 
     // prepare tokenURI
     const metadata = {
-        name: "Cosmic Genesis", // next time
-        description: " An extraordinary journey through the cosmos, captured in a single moment of stellar beauty. This unique piece represents the birth of new worlds and infinite possibilities.",
+        name: "Bored Ape",
+        description: "Bored Ape Yacht Club is a collection of 10,000 unique digital apes living on the Ethereum blockchain.",
         image: "ipfs://bafkreiatjyx5hkzw4iciwuoj24yz56mng6ls2e6thcowhv4357p742asm4",
     };
     console.log(metadata);
@@ -73,7 +73,7 @@ const page = () => {
                 <div className="aspect-square rounded-2xl overflow-hidden shadow-2xl transform hover:scale-105 transition-all duration-500 ease-out">
                   <img
                     src="https://ipfs.io/ipfs/bafkreiatjyx5hkzw4iciwuoj24yz56mng6ls2e6thcowhv4357p742asm4"
-                    alt="Cosmic Genesis NFT"
+                    alt="Bored Ape"
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>

@@ -294,67 +294,56 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
         );  
 
   
-        await emelMarketContract.decryptUserBid(data?.auctions[0].auctionId);
-        const userBid = await emelMarketContract.getDecryptedBid(data?.auctions[0].auctionId);
-        console.log({userBid});
-        setMyBid(userBid.toString());
-        
-        
+        const ciphertextHandle = await emelMarketContract.getEncryptedBid(data?.auctions[0].auctionId, String(address));
 
-
-
-
-        // const ciphertextHandle =
-        // console.log({ciphertextHandle});
+        console.log({ciphertextHandle});
 
         // decrypt value
-        // let value = BigInt(0);
-        // const keypair = fhe!.generateKeypair();
-        // const handleContractPairs = [
-        //     {
-        //         // handle: emelMarketContractTx.toString(),
-        //         handle: ciphertextHandle,
-        //         contractAddress: EmelMarket.address,
-        //     },
-        // ];
-        // const startTimeStamp = Math.floor(Date.now() / 1000).toString();
-        // const durationDays = "1"; // String for consistency
-        // const contractAddresses = [EmelMarket.address];
+        let value = BigInt(0);
+        const keypair = fhe!.generateKeypair();
+        const handleContractPairs = [
+            {
+                handle: ciphertextHandle,
+                contractAddress: EmelMarket.address,
+            },
+        ];
+        const startTimeStamp = Math.floor(Date.now() / 1000).toString();
+        const durationDays = "1"; // String for consistency
+        const contractAddresses = [EmelMarket.address];
 
-        // const eip712 = fhe!.createEIP712(
-        //     keypair.publicKey, 
-        //     contractAddresses, 
-        //     startTimeStamp, 
-        //     durationDays
-        // );
+        const eip712 = fhe!.createEIP712(
+            keypair.publicKey, 
+            contractAddresses, 
+            startTimeStamp, 
+            durationDays
+        );
         
-        // const signature = await signer!.signTypedData(
-        //     eip712.domain,
-        //     {
-        //         UserDecryptRequestVerification: eip712.types.UserDecryptRequestVerification,
-        //     },
-        //     eip712.message,
-        // );
+        const signature = await signer!.signTypedData(
+            eip712.domain,
+            {
+                UserDecryptRequestVerification: eip712.types.UserDecryptRequestVerification,
+            },
+            eip712.message,
+        );
 
+        console.log('Signature:', signature);
 
-        // console.log('Signature:', signature);
+        const result = await fhe.userDecrypt(
+            handleContractPairs,
+            keypair.privateKey,
+            keypair.publicKey,
+            signature!.replace("0x", ""),
+            contractAddresses,
+            signer!.address,
+            startTimeStamp,
+            durationDays,
+        );
+        value = result[ciphertextHandle] as bigint;
+        value = BigInt(result[ciphertextHandle]);
 
-        // const result = await fhe.userDecrypt(
-        //     handleContractPairs,
-        //     keypair.privateKey,
-        //     keypair.publicKey,
-        //     signature!.replace("0x", ""),
-        //     contractAddresses,
-        //     signer!.address,
-        //     startTimeStamp,
-        //     durationDays,
-        // );
-        // value = result[ciphertextHandle] as bigint;
-        // value = BigInt(result[ciphertextHandle]);
-
-        // console.log({decryptedValue: value});
-
-        // setMyBid(value.toString());
+        console.log({decryptedValue: result[ciphertextHandle]});
+        console.log({decryptedValue: value});
+        setMyBid(value.toString());
 
     }
 
@@ -394,15 +383,7 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
 
   }, [id, data, isSuccess]);
 
-  // Loading Spinner
-//     if (!auction) {
-//     return (
-//       <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center">
-//         <div className="animate-spin rounded-full h-32 w-32 border-4 border-white border-t-transparent"></div>
-//       </div>
-//     );
-//   }
-// data?.auctions
+
   return (
 
         <div className="min-h-screen bg-gradient-deep text-white">
