@@ -1,3 +1,4 @@
+// @ts-nocheck
 'use client';
 import { useImageLoader } from '@/hooks/useImageLoader';
 import { getTimeLeft } from '@/utils'

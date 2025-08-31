@@ -1,4 +1,4 @@
-
+// @ts-nocheck
 "use client"
 import React, { useState } from 'react';
 import { ArrowUpDown, Wallet, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';

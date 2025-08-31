@@ -2,7 +2,6 @@
 "use client"
 import React, { useEffect, useState } from 'react';
 import { Wallet, Tag, Gavel, History, ExternalLink } from 'lucide-react';
-import { GET_USER_NFTS } from '@/queries/nftQueries';
 import { useAccount, useBalance } from 'wagmi';
 import Link from 'next/link';
 import { Network, Alchemy } from "alchemy-sdk";
@@ -59,8 +58,6 @@ interface Auction extends NFT {
   status: 'AUCTIONED' | 'BID' | 'SOLD' | 'CANCELLED';
 }
 
-// TXN = transactionHash nftId collectionAddress seller price timestamp type/status
-// highest bidder and highest bid decrypted and shown on the frontend
 
 const alchemy = new Alchemy({
     apiKey: "TajhoIdNGy7RFjvAjEMca", 
@@ -72,54 +69,9 @@ const page = () => {
   const [userNFTs, setUserNFTs] = useState<NFT[]>([]);
 
 
-    // const chainId = useChainId();
+
     const { address } = useAccount();
 
-
-    const NFTs = [
-    {   
-        tokenImage: "https://ipfs.io/ipfs/bafkreifvmdhd54eiaep2xl2gdakfagl2azjfxas2bbx2v2xgp6uvryvgh4",
-        contractAddress: "0xDE6FCD074d20948b9C6587644D9B70A8bcBE5b12",
-        tokenId: "2",
-        tokenName: "Ethereal Artifacts",
-        tokenSymbol: "EAT",
-        auctionId: "1",
-        seller: "0x75cAd0aE2696B57a3591f1472c43d66ff7378018",
-        startTime: "1755950395",
-        endTime: "1755956995",
-        blockTimestamp: "1755950395",
-        transactionHash: "0x68116e64cfd4d8396d31f5239c30343dc624fd155ab4e9ce94beb2b14127b8c7",
-        status: "AUCTIONED",
-    },
-    {   
-        tokenImage: "https://ipfs.io/ipfs/bafkreifvmdhd54eiaep2xl2gdakfagl2azjfxas2bbx2v2xgp6uvryvgh4",
-        contractAddress: "0xDE6FCD074d20948b9C6587644D9B70A8bcBE5b12",
-        tokenId: "2",
-        tokenName: "Ethereal Artifacts",
-        tokenSymbol: "EAT",
-        auctionId: "1",
-        seller: "0x75cAd0aE2696B57a3591f1472c43d66ff7378018",
-        startTime: "1755950395",
-        endTime: "1755956995",
-        blockTimestamp: "1755950395",
-        transactionHash: "0x68116e64cfd4d8396d31f5239c30343dc624fd155ab4e9ce94beb2b14127b8c7",
-        status: "AUCTIONED",
-    },
-    {
-        tokenImage: "https://ipfs.io/ipfs/bafkreifvmdhd54eiaep2xl2gdakfagl2azjfxas2bbx2v2xgp6uvryvgh4",
-        contractAddress: "0xDE6FCD074d20948b9C6587644D9B70A8bcBE5b12",
-        tokenId: "2",
-        tokenName: "Ethereal Artifacts",
-        tokenSymbol: "EAT",
-        auctionId: "1",
-        seller: "0x75cAd0aE2696B57a3591f1472c43d66ff7378018",
-        startTime: "1755956995",
-        endTime: "1755957995",
-        blockTimestamp: "1755950395",
-        transactionHash: "0x68116e64cfd4d8396d31f5239c30343dc624fd155ab4e9ce94beb2b14127b8c7",
-        status: "AUCTIONED",
-    }
-  ]
 
   const { data } = useQuery({
     queryKey: ['data'],

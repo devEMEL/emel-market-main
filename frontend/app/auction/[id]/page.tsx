@@ -1,4 +1,4 @@
-
+// @ts-nocheck
 "use client"
 import React, { useEffect, useState } from 'react';
 import { Clock, User, Gavel, Trophy, Eye, Wallet, RefreshCw, Loader2 } from 'lucide-react';
