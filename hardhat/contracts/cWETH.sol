@@ -9,7 +9,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /// @title cWETH - Confidential WETH Token
 /// @notice A confidential ERC20 token wrapped around regular WETH using FHE
-contract cWETH is ConfidentialFungibleTokenERC20Wrapper, SepoliaConfig {
+contract CWETH is ConfidentialFungibleTokenERC20Wrapper, SepoliaConfig {
     /// @notice Constructor to initialize the confidential WETH token
     /// @param underlyingToken The address of the underlying WETH token
     constructor(IERC20 underlyingToken)

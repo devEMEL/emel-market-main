@@ -1,4 +1,7 @@
+// working version for address
+
 // SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.27;  
 
 import {FHE, externalEuint64, euint64, eaddress, ebool} from "@fhevm/solidity/lib/FHE.sol";
@@ -7,7 +10,7 @@ import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {ERC721Holder} from "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-import {cWETH} from "./cWETH.sol";
+import {ConfidentialWETH} from "./ConfidentialWETH.sol";
 
 contract old is SepoliaConfig, ReentrancyGuard, ERC721Holder {
     using FHE for *;
@@ -28,7 +31,7 @@ contract old is SepoliaConfig, ReentrancyGuard, ERC721Holder {
         uint256 decryptionRequestId;
     }
 
-    cWETH public paymentToken;
+    ConfidentialWETH public paymentToken;
     uint256 public auctionCount;
     mapping(uint256 => Auction) public auctions;
     mapping(address => mapping(uint256 => bool)) private nftOnAuction;
@@ -41,7 +44,7 @@ contract old is SepoliaConfig, ReentrancyGuard, ERC721Holder {
     event AuctionCancelled(uint256 indexed auctionId);
 
     constructor(address _paymentToken) {
-        paymentToken = cWETH(_paymentToken);
+        paymentToken = ConfidentialWETH(_paymentToken);
     }
 
     modifier onlyDuringAuction(uint256 auctionId) {
@@ -214,7 +217,6 @@ contract old is SepoliaConfig, ReentrancyGuard, ERC721Holder {
 
     // Mark NFT as claimed and cleanup
     a.nftClaimed = true;
-    delete auctions[auctionId];
 
 
     emit AuctionResolved(auctionId);
@@ -233,7 +235,6 @@ contract old is SepoliaConfig, ReentrancyGuard, ERC721Holder {
         IERC721(a.nftContract).transferFrom(address(this), a.beneficiary, a.tokenId);
 
         nftOnAuction[a.nftContract][a.tokenId] = false;
-        delete auctions[auctionId];
 
         emit AuctionCancelled(auctionId);
     }
@@ -310,3 +311,4 @@ contract old is SepoliaConfig, ReentrancyGuard, ERC721Holder {
     }
 
 }
+
