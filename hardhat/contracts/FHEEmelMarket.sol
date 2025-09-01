@@ -5,11 +5,10 @@ import {FHE, externalEuint64, euint64, eaddress, ebool} from "@fhevm/solidity/li
 import {SepoliaConfig} from "@fhevm/solidity/config/ZamaConfig.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {ERC721Holder} from "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import {ConfidentialWETH} from "./ConfidentialWETH.sol";
 
-contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard, ERC721Holder {
+contract FHEEmelMarket is SepoliaConfig, ERC721Holder {
     using FHE for *;
 
     struct Auction {
@@ -33,6 +32,7 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard, ERC721Holder {
     mapping(uint256 => Auction) public auctions;
     mapping(address => mapping(uint256 => bool)) private nftOnAuction;
     mapping(uint256 => uint256) internal auctionIndexByRequestId;
+    uint256 realContractBalance;
 
 
     event AuctionCreated(uint256 indexed auctionId, address indexed nftCA, uint256 tokenId, address indexed seller, uint256 startTime, uint256 endTime);
@@ -81,7 +81,7 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard, ERC721Holder {
     }
 
 
-    function bid(uint256 auctionId, externalEuint64 encryptedAmount, bytes calldata proof) external onlyDuringAuction(auctionId) nonReentrant {
+    function bid(uint256 auctionId, externalEuint64 encryptedAmount, bytes calldata proof) external onlyDuringAuction(auctionId) {
         Auction storage a = auctions[auctionId];
 
         require(nftOnAuction[a.nftContract][a.tokenId], "NFT not on auction");
@@ -135,7 +135,6 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard, ERC721Holder {
    function resolveAndRefundLosers(uint256 auctionId) 
     external 
     onlyAfterEnd(auctionId) 
-    nonReentrant 
 {
     Auction storage a = auctions[auctionId];
     require(msg.sender == a.beneficiary, "Only auction owner can resolve");
@@ -246,6 +245,7 @@ contract FHEEmelMarket is SepoliaConfig, ReentrancyGuard, ERC721Holder {
     function getBidders(uint256 auctionId) external view returns (address[] memory) {
         return auctions[auctionId].bidders;
     }
+
 
 }
 

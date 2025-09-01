@@ -10,7 +10,7 @@ import { Alchemy, Network } from 'alchemy-sdk';
 import { useQuery } from '@tanstack/react-query';
 import { gql, request } from 'graphql-request';
 import { useImageLoader } from '@/hooks/useImageLoader';
-import { etherToWei, formatRelativeTime, getTimeLeft, truncateAddress } from '@/utils';
+import { etherToWei, formatRelativeTime, getTimeLeft, truncateAddress, weiToEther } from '@/utils';
 import CWeth from "@/abi/CWeth.json";
 import EmelMarket from "@/abi/EmelMarket.json";
 import { useFhe } from '@/components/FheProvider';
@@ -83,7 +83,7 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
 
     const [tokenDetails, setTokenDetails] = useState<any>({});
     const [bidAmount, setBidAmount] = useState('');
-    const [myBid, setMyBid] = useState('0');
+    const [myBid, setMyBid] = useState('-');
     const [showMyBid, setShowMyBid] = useState(false);
     const [winningAddress, setWinningAddress] = useState('');
     const [showWinningAddress, setShowWinningAddress] = useState(false);
@@ -213,6 +213,8 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
         const resp = await bidTx.wait();
         console.log(resp);
 
+        setBidAmount('0');
+
 
     }
 
@@ -283,7 +285,9 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
         if(!showMyBid) {
             setShowMyBid(true);
         } else {
-            setShowMyBid(false); return;
+            setShowMyBid(false); 
+            setMyBid('-')
+            return;
         }
 
         
@@ -343,7 +347,7 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
 
         console.log({decryptedValue: result[ciphertextHandle]});
         console.log({decryptedValue: value});
-        setMyBid(value.toString());
+        setMyBid(weiToEther(value.toString()));
 
     }
 
@@ -558,7 +562,7 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
      
               {/* Action Buttons */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* { data?.auctions[0].status != 'SOLD' && (
+                { data?.auctions[0].status != 'SOLD' && (
                     <button
                     onClick={handleShowMyBid}
                     className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2"
@@ -567,7 +571,7 @@ const page: React.FC<AuctionPageProps> = ({ params }) => {
                     <span>My Bid</span>
                 </button>
  
-                ) } */}
+                ) }
                 
                 <button
                   onClick={handleShowWinningAddress}

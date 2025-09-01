@@ -41,9 +41,9 @@ The marketplace leverages cutting-edge cryptographic technology to ensure that:
 
 | Contract Name | Address | Explorer Link |
 |---------------|---------|---------------|
-| SimpleNFT | 0xfe21a6188cDcdEe32Dc79cA56F5BE48F9A45022B | [View on Etherscan](https://sepolia.etherscan.io/address/0xfe21a6188cDcdEe32Dc79cA56F5BE48F9A45022B) |
-| ConfidentialWETH | 0x648FdB91fF08251Be5AaC2AEaE3B0Dd8E12922d3 | [View on Etherscan](https://sepolia.etherscan.io/address/0x648FdB91fF08251Be5AaC2AEaE3B0Dd8E12922d3) |
-| FHEEmelMarket | 0xE9916c794D19C7627Efc24DefF825BBD9Aa0672D | [View on Etherscan](https://sepolia.etherscan.io/address/0xE9916c794D19C7627Efc24DefF825BBD9Aa0672D) |
+| SimpleNFT | 0xfe21a6188cDcdEe32Dc79cA56F5BE48F9A45022B | [View on Etherscan](https://sepolia.etherscan.io/address/0x9Ad671c2FeF85479dFCf48B998f20ffF2E6625fE) |
+| ConfidentialWETH | 0x648FdB91fF08251Be5AaC2AEaE3B0Dd8E12922d3 | [View on Etherscan](https://sepolia.etherscan.io/address/0xA3b95080674fBd12fC3626046DCa474c48d012d8) |
+| FHEEmelMarket | 0xE9916c794D19C7627Efc24DefF825BBD9Aa0672D | [View on Etherscan](https://sepolia.etherscan.io/address/0xA8B39ecfbB39c6749C8BA40ee9d349aB844F93cE) |
 
 ### 🔄 How It Works
 

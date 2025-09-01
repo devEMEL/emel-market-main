@@ -14,9 +14,9 @@ contract ConfidentialWETH is ConfidentialFungibleToken, SepoliaConfig {
     /// @dev Mapping from gateway decryption request ID to the address that will receive the tokens
     mapping(uint256 requestID => address receiver) private _receivers;
 
-    constructor() ConfidentialFungibleToken("Confidential WETH", "cWETH", "https://cweth.com") {
-        DECIMALS = 9;
-        RATE = 10 ** 9;
+    constructor() ConfidentialFungibleToken("Confidential WETH", "cWETH", "") {
+        DECIMALS = 18;
+        RATE = 1;
     }
 
     /// @inheritdoc ConfidentialFungibleToken
@@ -108,3 +108,6 @@ contract ConfidentialWETH is ConfidentialFungibleToken, SepoliaConfig {
         _receivers[requestID] = to;
     }
 }
+
+
+

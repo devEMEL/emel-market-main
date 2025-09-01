@@ -73,6 +73,9 @@ describe("FHEEmelMarket Test", function () {
             SimpleNFTContract,
             SimpleNFTContractAddress
         } = await deployFixture());
+
+         // Initialize FHEVM
+        await fhevm.initializeCLIApi();
     });
 
     describe("Contract Deployment and Initialization", function () {
@@ -195,10 +198,62 @@ describe("FHEEmelMarket Test", function () {
             console.log({auc3})
 
     
+            // send cweth to contract and read contract balance.
+            // const contractBeforeBalance = await CWETHContract.balanceOf(fheEmelMarketContractAddress);
+            const transferAmount = await fhevm
+            .createEncryptedInput(fheEmelMarketContractAddress, signers.deployer.address)
+            .add64(BigInt(ethers.parseEther("0.3")))
+            .encrypt();
+            // await CWETHContract.confidentialTransfer(fheEmelMarketContractAddress, transferAmount.handles[0]);
+            const contractAfterBalance = await  CWETHContract.balanceOf(fheEmelMarketContractAddress);
+
+            // const contractBeforeBalanceDecrypted = await fhevm.decrypt
+            // const contractAfterBalanceDecrypted = 
+            //  await fhevm.awaitDecryptionOracle();
+
+            // console.log({contractBeforeBalance});
+            // console.log({contractAfterBalance});
+
+
+
+//1234
+
+//    const userBalanceBefore = await CWETHContract.balanceOf(signers.deployer.address);
+    // const userClearBalanceBefore = await fhevm.userDecryptEuint(
+    //   FhevmType.euint64,
+    //   userBalanceBefore.toString(),
+    //   CWETHContractAddress,
+    //   signers.deployer,
+    // );
+    // console.log({userClearBalanceBefore});
+
+
+    
+    // const encrypted = await fhevm.createEncryptedInput
+    // (CWETHContractAddress, signers.deployer.address)
+    // .add64(BigInt(ethers.parseEther("0.1")))
+    // .encrypt();
+
+
+    // const tx = await CWETHContract.connect(signers.deployer)
+    //   ["confidentialTransfer(address,bytes32,bytes)"](fheEmelMarketContractAddress, encrypted.handles[0], encrypted.inputProof);
+    // await tx.wait();
+
+
+    // const userBalanceAfter = await CWETHContract.balanceOf(signers.deployer.address);
+
+    // const userClearBalanceAfter = await fhevm.userDecryptEuint(
+    //   FhevmType.euint64,
+    //   userBalanceAfter.toString(),
+    //   CWETHContractAddress,
+    //   signers.deployer,
+    // );
+    // console.log({userClearBalanceAfter});
+
+
 
 
         });
     });
-
 });
 

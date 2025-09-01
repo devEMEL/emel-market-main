@@ -27,11 +27,6 @@
     },
     {
       "inputs": [],
-      "name": "ReentrancyGuardReentrantCall",
-      "type": "error"
-    },
-    {
-      "inputs": [],
       "name": "UnsupportedHandleType",
       "type": "error"
     },
